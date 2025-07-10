@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import * as Tone from "tone";
 import { transformNoteForDatabase } from "../utils/noteExtractor";
@@ -7,8 +7,6 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY
 );
-
-const melody = ["B3", "C3", "C4", "F#2", "C3"]; // Example melody, update as needed
 
 function dbNoteToToneNote(dbNote) {
   const match = dbNote.match(/^([a-g])sharp(\d)$/i);
@@ -22,6 +20,23 @@ export default function SequentialPlayback() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [sampleUrls, setSampleUrls] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [melody, setMelody] = useState([]);
+
+  // Load melody from JSON on mount
+  useEffect(() => {
+    const loadMelody = async () => {
+      const response = await fetch("/when-the-saints.json");
+      const data = await response.json();
+      // Use the first track for MVP
+      const notes = data.tracks[0].notes.map((n) => ({
+        note: n.name,
+        duration: n.duration, // in seconds
+      }));
+      setMelody(notes);
+      console.log("Loaded melody:", notes);
+    };
+    loadMelody();
+  }, []);
 
   // Fetch all available recordings and build the urls mapping
   const fetchSampleUrls = async () => {
@@ -34,7 +49,6 @@ export default function SequentialPlayback() {
       setIsLoading(false);
       return;
     }
-    // Build mapping: { C4: url, D4: url, ... }
     const urls = {};
     data.forEach((rec) => {
       const note = dbNoteToToneNote(rec.note);
@@ -61,10 +75,14 @@ export default function SequentialPlayback() {
     console.log("Samples loaded");
 
     for (let i = 0; i < melody.length; i++) {
-      const note = melody[i];
-      console.log(`Playing ${note}`);
-      sampler.triggerAttackRelease(note, 0.5);
-      await new Promise((res) => setTimeout(res, 500));
+      const { note, duration } = melody[i];
+      if (!sampleUrls[note]) {
+        console.warn(`No sample for ${note}, skipping`);
+        continue;
+      }
+      console.log(`Playing ${note} for ${duration}s`);
+      sampler.triggerAttackRelease(note, duration);
+      await new Promise((res) => setTimeout(res, duration * 1000));
     }
 
     setIsPlaying(false);
@@ -82,7 +100,7 @@ export default function SequentialPlayback() {
         maxWidth: 600,
       }}
     >
-      <h2>Sequential User Note Playback (Sampler)</h2>
+      <h2>When the Saints (User Recordings Sampler)</h2>
       <button
         onClick={fetchSampleUrls}
         disabled={isLoading || isPlaying}
@@ -92,10 +110,14 @@ export default function SequentialPlayback() {
       </button>
       <button
         onClick={playMelody}
-        disabled={isPlaying || Object.keys(sampleUrls).length === 0}
+        disabled={
+          isPlaying ||
+          Object.keys(sampleUrls).length === 0 ||
+          melody.length === 0
+        }
         style={{ padding: "0.7rem 1.2rem", fontSize: "1rem" }}
       >
-        {isPlaying ? "Playing..." : "Play Melody"}
+        {isPlaying ? "Playing..." : "Play Song"}
       </button>
       <ul style={{ marginTop: 20, textAlign: "left" }}>
         {Object.entries(sampleUrls).map(([note, url]) => (
