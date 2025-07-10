@@ -199,6 +199,7 @@ function App() {
 
   return (
     <AppContainer>
+      <TestComponent />
       <Title>When the Saints Go Marching In</Title>
       <Description>
         Click the buttons to play each note of the melody
@@ -267,8 +268,6 @@ function App() {
         <h2>Full Song Playback</h2>
         <PlaybackTest />
       </Section>
-
-      <TestComponent />
     </AppContainer>
   );
 }
