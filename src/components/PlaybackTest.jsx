@@ -1,80 +1,15 @@
 import { styled } from "@pigment-css/react";
 import { useState, useEffect, useRef } from "react";
 import * as Tone from "tone";
+import { createClient } from "@supabase/supabase-js";
+import { transformNoteForDatabase } from "../utils/noteExtractor";
 
-const PlaybackContainer = styled("div")({
-  padding: "2rem",
-  maxWidth: "800px",
-  margin: "0 auto",
-  fontFamily: "Arial, sans-serif",
-});
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
-const ControlsContainer = styled("div")({
-  display: "flex",
-  gap: "1rem",
-  marginBottom: "2rem",
-  flexWrap: "wrap",
-});
-
-const Button = styled("button")({
-  padding: "0.8rem 1.5rem",
-  fontSize: "1rem",
-  fontWeight: 500,
-  borderRadius: 8,
-  border: "2px solid #4a90e2",
-  background: "white",
-  color: "#4a90e2",
-  cursor: "pointer",
-  transition: "all 0.2s ease",
-  "&:hover": {
-    background: "#e3f2fd",
-    transform: "translateY(-1px)",
-    boxShadow: "0 4px 8px rgba(74, 144, 226, 0.2)",
-  },
-  "&:disabled": {
-    opacity: 0.5,
-    cursor: "not-allowed",
-    transform: "none",
-  },
-  "&.playing": {
-    background: "#4caf50",
-    borderColor: "#4caf50",
-    color: "white",
-  },
-});
-
-const StatusText = styled("div")({
-  marginBottom: "1rem",
-  padding: "1rem",
-  borderRadius: 8,
-  backgroundColor: "#f5f5f5",
-  border: "1px solid #ddd",
-});
-
-const ProgressBar = styled("div")({
-  width: "100%",
-  height: "8px",
-  backgroundColor: "#e0e0e0",
-  borderRadius: 4,
-  overflow: "hidden",
-  marginBottom: "1rem",
-});
-
-const ProgressFill = styled("div")({
-  height: "100%",
-  backgroundColor: "#4caf50",
-  transition: "width 0.1s ease",
-});
-
-const TrackInfo = styled("div")({
-  marginTop: "1rem",
-  padding: "1rem",
-  backgroundColor: "#f9f9f9",
-  borderRadius: 8,
-  border: "1px solid #e0e0e0",
-});
-
-function PlaybackTest() {
+export default function PlaybackTest() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -86,6 +21,45 @@ function PlaybackTest() {
   const synthsRef = useRef({});
   const animationFrameRef = useRef(null);
 
+  //   console.log(supabase);
+
+  // Helper to fetch best hum for a note from Supabase
+  const getHumForNote = async (noteName) => {
+    const transformedNote = transformNoteForDatabase(noteName);
+    console.log(`Fetching hum for note: ${noteName} -> ${transformedNote}`);
+
+    try {
+      const { data, error } = await supabase
+        .from("recordings")
+        .select("filename, note")
+        .eq("note", transformedNote)
+        .limit(1)
+        .maybeSingle(); // Use maybeSingle to handle cases where no recording exists
+
+      if (error) {
+        console.error("Supabase error:", error);
+        return null;
+      }
+
+      if (!data) {
+        console.log(
+          `No recording found for note: ${transformedNote} - this is expected for some notes`
+        );
+        return null;
+      }
+
+      console.log("Found recording data:", data);
+
+      // Construct the URL using the correct field names
+      const url = `https://tlyohnvvixywznonvgwj.supabase.co/storage/v1/object/public/recordings/${data.note}/${data.filename}.mp3`;
+      console.log("Constructed URL:", url);
+
+      return url;
+    } catch (error) {
+      console.error("Error in getHumForNote:", error);
+      return null;
+    }
+  };
   // Load the song data
   useEffect(() => {
     const loadSong = async () => {
@@ -240,11 +214,28 @@ function PlaybackTest() {
       // Schedule all notes
       sequences.forEach(
         ({ time, note, duration, velocity, synth, originalDuration }) => {
-          Tone.Transport.schedule((time) => {
-            console.log(
-              `Playing ${note} for ${duration} beats (original: ${originalDuration})`
-            );
-            synth.triggerAttackRelease(note, duration, time, velocity);
+          Tone.Transport.schedule(async (transportTime) => {
+            try {
+              const url = await getHumForNote(note);
+              if (!url) {
+                console.warn(`No hum found for ${note}, skipping...`);
+                return;
+              }
+
+              const player = new Tone.Player({
+                url,
+                volume: -3,
+                fadeOut: 0.2,
+              }).toDestination();
+
+              await player.load();
+              player.start(transportTime, 0, duration);
+              console.log(
+                `Playing hum for ${note} at ${transportTime} for ${duration}`
+              );
+            } catch (error) {
+              console.error(`Error playing hum for ${note}:`, error);
+            }
           }, time);
         }
       );
@@ -378,4 +369,74 @@ function PlaybackTest() {
   );
 }
 
-export default PlaybackTest;
+const PlaybackContainer = styled("div")({
+  padding: "2rem",
+  maxWidth: "800px",
+  margin: "0 auto",
+  fontFamily: "Arial, sans-serif",
+});
+
+const ControlsContainer = styled("div")({
+  display: "flex",
+  gap: "1rem",
+  marginBottom: "2rem",
+  flexWrap: "wrap",
+});
+
+const Button = styled("button")({
+  padding: "0.8rem 1.5rem",
+  fontSize: "1rem",
+  fontWeight: 500,
+  borderRadius: 8,
+  border: "2px solid #4a90e2",
+  background: "white",
+  color: "#4a90e2",
+  cursor: "pointer",
+  transition: "all 0.2s ease",
+  "&:hover": {
+    background: "#e3f2fd",
+    transform: "translateY(-1px)",
+    boxShadow: "0 4px 8px rgba(74, 144, 226, 0.2)",
+  },
+  "&:disabled": {
+    opacity: 0.5,
+    cursor: "not-allowed",
+    transform: "none",
+  },
+  "&.playing": {
+    background: "#4caf50",
+    borderColor: "#4caf50",
+    color: "white",
+  },
+});
+
+const StatusText = styled("div")({
+  marginBottom: "1rem",
+  padding: "1rem",
+  borderRadius: 8,
+  backgroundColor: "#f5f5f5",
+  border: "1px solid #ddd",
+});
+
+const ProgressBar = styled("div")({
+  width: "100%",
+  height: "8px",
+  backgroundColor: "#e0e0e0",
+  borderRadius: 4,
+  overflow: "hidden",
+  marginBottom: "1rem",
+});
+
+const ProgressFill = styled("div")({
+  height: "100%",
+  backgroundColor: "#4caf50",
+  transition: "width 0.1s ease",
+});
+
+const TrackInfo = styled("div")({
+  marginTop: "1rem",
+  padding: "1rem",
+  backgroundColor: "#f9f9f9",
+  borderRadius: 8,
+  border: "1px solid #e0e0e0",
+});

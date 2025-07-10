@@ -2,79 +2,10 @@ import { useState, useEffect } from "react";
 import * as Tone from "tone";
 import { styled } from "@pigment-css/react";
 import TestComponent from "./components/TestComponent";
+import PlayHumOnNote from "./components/PlayHumOnNote";
 import StyledMusicButton from "./components/StyledMusicButton";
 import PlaybackTest from "./components/PlaybackTest";
 import { extractUniqueNotes, getNoteStats } from "./utils/noteExtractor";
-
-const AppContainer = styled("div")({
-  fontFamily: "sans-serif",
-  padding: "2rem",
-  background: "#f7f7f7",
-  minHeight: "100vh",
-  textAlign: "center",
-});
-
-const Title = styled("h1")({
-  color: "#333",
-  marginBottom: "0.5rem",
-});
-
-const Description = styled("p")({
-  color: "#666",
-  marginBottom: "2rem",
-});
-
-const NoteButtons = styled("div")({
-  display: "flex",
-  flexWrap: "wrap",
-  justifyContent: "center",
-  gap: "0.4rem",
-  maxWidth: "800px",
-  margin: "0 auto",
-});
-
-const Section = styled("div")({
-  marginBottom: "3rem",
-  padding: "2rem",
-  backgroundColor: "white",
-  borderRadius: "12px",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-});
-
-const RecordingButton = styled("button")({
-  padding: "0.8rem 1.5rem",
-  fontSize: "1rem",
-  fontWeight: "500",
-  borderRadius: "8px",
-  border: "2px solid #e74c3c",
-  background: "white",
-  color: "#e74c3c",
-  cursor: "pointer",
-  transition: "all 0.2s ease",
-  margin: "0.2rem",
-  "&:hover": {
-    background: "#e74c3c",
-    color: "white",
-  },
-  "&.recording": {
-    background: "#e74c3c",
-    color: "white",
-    animation: "pulse 1s infinite",
-  },
-  "@keyframes pulse": {
-    "0%": { transform: "scale(1)" },
-    "50%": { transform: "scale(1.05)" },
-    "100%": { transform: "scale(1)" },
-  },
-});
-
-const NoteGrid = styled("div")({
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
-  gap: "0.5rem",
-  maxWidth: "800px",
-  margin: "0 auto",
-});
 
 function App() {
   const [synth, setSynth] = useState(null);
@@ -199,7 +130,8 @@ function App() {
 
   return (
     <AppContainer>
-      <TestComponent />
+      {/* <TestComponent /> */}
+      <PlayHumOnNote />
       <Title>When the Saints Go Marching In</Title>
       <Description>
         Click the buttons to play each note of the melody
@@ -273,3 +205,73 @@ function App() {
 }
 
 export default App;
+
+const AppContainer = styled("div")({
+  fontFamily: "sans-serif",
+  padding: "2rem",
+  background: "#f7f7f7",
+  minHeight: "100vh",
+  textAlign: "center",
+});
+
+const Title = styled("h1")({
+  color: "#333",
+  marginBottom: "0.5rem",
+});
+
+const Description = styled("p")({
+  color: "#666",
+  marginBottom: "2rem",
+});
+
+const NoteButtons = styled("div")({
+  display: "flex",
+  flexWrap: "wrap",
+  justifyContent: "center",
+  gap: "0.4rem",
+  maxWidth: "800px",
+  margin: "0 auto",
+});
+
+const Section = styled("div")({
+  marginBottom: "3rem",
+  padding: "2rem",
+  backgroundColor: "white",
+  borderRadius: "12px",
+  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+});
+
+const RecordingButton = styled("button")({
+  padding: "0.8rem 1.5rem",
+  fontSize: "1rem",
+  fontWeight: "500",
+  borderRadius: "8px",
+  border: "2px solid #e74c3c",
+  background: "white",
+  color: "#e74c3c",
+  cursor: "pointer",
+  transition: "all 0.2s ease",
+  margin: "0.2rem",
+  "&:hover": {
+    background: "#e74c3c",
+    color: "white",
+  },
+  "&.recording": {
+    background: "#e74c3c",
+    color: "white",
+    animation: "pulse 1s infinite",
+  },
+  "@keyframes pulse": {
+    "0%": { transform: "scale(1)" },
+    "50%": { transform: "scale(1.05)" },
+    "100%": { transform: "scale(1)" },
+  },
+});
+
+const NoteGrid = styled("div")({
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
+  gap: "0.5rem",
+  maxWidth: "800px",
+  margin: "0 auto",
+});

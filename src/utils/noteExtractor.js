@@ -56,3 +56,21 @@ export function getNoteStats(songData) {
 
   return noteCounts;
 }
+
+// Transform note names from MIDI format to database format
+// Examples: "C4" -> "c4", "F#2" -> "fsharp2", "C#3" -> "csharp3"
+export function transformNoteForDatabase(noteName) {
+  if (!noteName) return noteName;
+
+  console.log(`Transforming note: ${noteName}`);
+
+  // Handle sharp notes (#)
+  let transformed = noteName.replace(/#/g, "sharp");
+
+  // Convert to lowercase
+  transformed = transformed.toLowerCase();
+
+  console.log(`Transformed to: ${transformed}`);
+
+  return transformed;
+}
