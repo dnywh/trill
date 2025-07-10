@@ -5,6 +5,7 @@ import TestComponent from "./components/TestComponent";
 import PlayHumOnNote from "./components/PlayHumOnNote";
 import StyledMusicButton from "./components/StyledMusicButton";
 import PlaybackTest from "./components/PlaybackTest";
+import SequentialPlayback from "./components/SequentialPlayback";
 import { extractUniqueNotes, getNoteStats } from "./utils/noteExtractor";
 
 function App() {
@@ -131,6 +132,7 @@ function App() {
   return (
     <AppContainer>
       {/* <TestComponent /> */}
+      <SequentialPlayback />
       <PlayHumOnNote />
       <Title>When the Saints Go Marching In</Title>
       <Description>
@@ -146,7 +148,7 @@ function App() {
         </NoteButtons>
       </Section>
 
-      <Section>
+      {/* <Section>
         <h2>All Notes from the Song</h2>
         <p>
           These are all the unique notes found in "When the Saints Go Marching
@@ -194,7 +196,7 @@ function App() {
             </div>
           ))}
         </NoteGrid>
-      </Section>
+      </Section> */}
 
       <Section>
         <h2>Full Song Playback</h2>
