@@ -21,6 +21,25 @@ export default function MusicPlayer({ melody = [] }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [sampleUrls, setSampleUrls] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [contributorCount, setContributorCount] = useState(null); // <-- Add this line
+
+  // Fetch contributor count from Supabase
+  useEffect(() => {
+    async function fetchContributorCount() {
+      // This gets the count of unique contributor_id values
+      const { count, error } = await supabase
+        .from("recordings")
+        .select("contributor_id", { count: "exact" })
+        .not("contributor_id", "is", null);
+      if (error) {
+        console.error("Error fetching contributor count:", error);
+        setContributorCount("?");
+      } else {
+        setContributorCount(count);
+      }
+    }
+    fetchContributorCount();
+  }, []);
 
   // Fetch all available recordings and build the urls mapping
   const fetchSampleUrls = async () => {
@@ -77,6 +96,10 @@ export default function MusicPlayer({ melody = [] }) {
     <Container>
       <Title>Trill</Title>
       <h2>When the Saints Go Marching In</h2>
+      <p>
+        Sampled from {contributorCount && contributorCount} contributors around
+        the world
+      </p>
       <button
         onClick={fetchSampleUrls}
         disabled={isLoading || isPlaying}

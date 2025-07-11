@@ -9,7 +9,12 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY
 );
 
-export default function NoteButton({ note, onPlay, isPlaying = false }) {
+export default function NoteButton({
+  note,
+  onPlay,
+  isPlaying = false,
+  contributorId,
+}) {
   const [isPressed, setIsPressed] = useState(false);
   const [buttonState, setButtonState] = useState("idle"); // idle, listening, recording, done
   const [synth, setSynth] = useState(null);
@@ -116,6 +121,7 @@ export default function NoteButton({ note, onPlay, isPlaying = false }) {
         note: dbNote,
         filename: filename,
         created_at: new Date().toISOString(),
+        contributor_id: contributorId,
       });
 
       if (dbError) {

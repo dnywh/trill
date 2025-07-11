@@ -1,0 +1,14 @@
+You are helping make a React app called 'Trill'.
+
+Trill is a fun little project that plays a song based on the recordings of strangers. The song is "Oh When the Saints Go Marching In" and is available as a Tone.js-friendly JSON file (converted from MIDI) in the public folder.
+
+We are just using track[0] in this song for now. We check which notes are in this track in App.tsx, via loadSongData. That then informs which notes a user can record, such as C3, G4, F#2, etc.
+
+## Technologies
+
+- Supabase for storing and retrieving song records and .wav files (see the `recordings` table and bucket)
+- Tone.js for playing the melody
+
+## Approach
+
+Anyone can upload a sound file (and related table row). No auth is used.

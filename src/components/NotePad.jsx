@@ -1,11 +1,13 @@
 import NoteButton from "./NoteButton";
+import { getOrCreateContributorId } from "../utils/getOrCreateContributorId";
 import { styled } from "@pigment-css/react";
 
 export default function NotePad({ notes }) {
+  const contributorId = getOrCreateContributorId();
   return (
     <Section>
       {notes.map((note, index) => (
-        <NoteButton key={index} note={note} />
+        <NoteButton key={index} note={note} contributorId={contributorId} />
       ))}
     </Section>
   );
