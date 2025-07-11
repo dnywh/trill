@@ -35,7 +35,7 @@ export default function MusicPlayer() {
         duration: n.duration, // in seconds
       }));
       setMelody(notes);
-      console.log("Loaded melody:", notes);
+      // console.log("Loaded melody:", notes);
     };
     loadMelody();
   }, []);
