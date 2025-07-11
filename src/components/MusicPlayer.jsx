@@ -17,28 +17,10 @@ function dbNoteToToneNote(dbNote) {
   return dbNote.charAt(0).toUpperCase() + dbNote.slice(1);
 }
 
-export default function MusicPlayer() {
+export default function MusicPlayer({ melody = [] }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [sampleUrls, setSampleUrls] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [melody, setMelody] = useState([]);
-
-  // Load melody from JSON on mount
-  // TODO: Do this at App level because the notes in tracks[0] is also used in NotePad
-  useEffect(() => {
-    const loadMelody = async () => {
-      const response = await fetch("/when-the-saints.json");
-      const data = await response.json();
-      // Use the first track for MVP
-      const notes = data.tracks[0].notes.map((n) => ({
-        note: n.name,
-        duration: n.duration, // in seconds
-      }));
-      setMelody(notes);
-      // console.log("Loaded melody:", notes);
-    };
-    loadMelody();
-  }, []);
 
   // Fetch all available recordings and build the urls mapping
   const fetchSampleUrls = async () => {
