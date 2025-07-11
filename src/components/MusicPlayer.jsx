@@ -74,16 +74,7 @@ export default function MusicPlayer({ melody = [] }) {
   };
 
   return (
-    <div
-      style={{
-        padding: "2rem",
-        background: "#fff",
-        borderRadius: 12,
-        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-        margin: "2rem auto",
-        maxWidth: 600,
-      }}
-    >
+    <Container>
       <Title>Trill</Title>
       <h2>When the Saints Go Marching In</h2>
       <button
@@ -104,7 +95,7 @@ export default function MusicPlayer({ melody = [] }) {
       >
         {isPlaying ? "Playing..." : "Play Song"}
       </button>
-      <ul style={{ marginTop: 20, textAlign: "left" }}>
+      {/* <ul style={{ marginTop: 20, textAlign: "left" }}>
         {Object.entries(sampleUrls).map(([note, url]) => (
           <li key={note}>
             {note}:{" "}
@@ -113,10 +104,20 @@ export default function MusicPlayer({ melody = [] }) {
             </a>
           </li>
         ))}
-      </ul>
-    </div>
+      </ul> */}
+    </Container>
   );
 }
+
+const Container = styled("section")({
+  aspectRatio: "1 / 1",
+  // minHeight: 0,
+  padding: "2rem",
+  background: "#fff",
+  borderRadius: 12,
+  // boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+  // maxWidth: 600,
+});
 
 const Title = styled("h1")({
   color: "#333",

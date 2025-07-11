@@ -151,11 +151,11 @@ export default function NoteButton({ note, onPlay, isPlaying = false }) {
   const getButtonText = () => {
     switch (buttonState) {
       case "listening":
-        return "Listen, then sing";
+        return "Sing this tune";
       case "recording":
         return "Keep singing...";
       case "done":
-        return "Done";
+        return "Added!";
       default:
         return note;
     }
@@ -186,7 +186,8 @@ export default function NoteButton({ note, onPlay, isPlaying = false }) {
 }
 
 const StyledButton = styled("button")({
-  margin: "0.4rem",
+  width: "100%",
+  height: "100%",
   padding: "0.8rem 1.2rem",
   fontSize: "1rem",
   fontWeight: 500,
@@ -196,9 +197,14 @@ const StyledButton = styled("button")({
   color: "#4a90e2",
   cursor: "pointer",
   transition: "all 0.2s ease",
-  minWidth: 60,
   position: "relative",
   overflow: "hidden",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  textAlign: "center",
+  lineHeight: "1.2",
+  wordBreak: "break-word",
   "&:hover": {
     background: "#e3f2fd",
     transform: "translateY(-1px)",
@@ -225,12 +231,14 @@ const StyledButton = styled("button")({
     borderColor: "#ff9800",
     color: "white",
     animation: "pulse 1s infinite",
+    fontSize: "13px",
   },
   "&.recording": {
     background: "#e74c3c",
     borderColor: "#e74c3c",
     color: "white",
     animation: "pulse 0.5s infinite",
+    fontSize: "13px",
   },
   "&.done": {
     background: "#4caf50",

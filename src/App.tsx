@@ -64,7 +64,11 @@ export default App;
 const AppContainer = styled("div")({
   fontFamily: "sans-serif",
   padding: "2rem",
-  background: "#f7f7f7",
   minHeight: "100vh",
-  textAlign: "center",
+  display: "flex",
+  flexDirection: "column",
+  gap: "2rem",
+  "@media (min-width: 768px)": {
+    flexDirection: "row",
+  },
 });

@@ -1,34 +1,26 @@
-# Pigment CSS - Vite with TypeScript example project
+# Trill
 
-## How to use
+This is a dogfooding experiment for Supabase. It does some naughty things:
 
-Download the example [or clone the repo](https://github.com/mui/pigment-css):
+- Allows `anon` uploads to a storage bucket named `recordings`
+- Allows `anon` additions to a table named `recordings`
 
-<!-- #default-branch-switch -->
+This makes it so anyone on the internet can contribute to the Trill project: a crowdsourced song made up of people humming different notes of _When the Saints Go Marching In_.
 
-```bash
-curl https://codeload.github.com/mui/pigment-css/tar.gz/master | tar -xz --strip=2 pigment-css-master/examples/pigment-css-vite-ts
-cd pigment-css-vite-ts
-```
+## Quick start
 
-Install it and run:
+Clone the repo and run:
 
 ```bash
 npm install
 npm run dev
 ```
 
-or:
+## Later
 
-<!-- #default-branch-switch -->
+Trill was a quick two day project. There are tonnes more things that could be done to improve it, such as:
 
-[![Edit on StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/mui/pigment-css/tree/master/examples/pigment-css-vite-ts)
-
-[![Edit on CodeSandbox](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/p/sandbox/github/mui/pigment-css/tree/master/examples/pigment-css-vite-ts)
-
-## Learn more
-
-To learn more about this example:
-
-- [Pigment CSS documentation](https://github.com/mui/pigment-css/blob/master/README.md) - learn more about Pigment CSS features and APIs.
-- [Vite documentation](https://vite.dev/guide/) - learn about Vite features and APIs.
+- [] Ability for user to just hear their own notes (not the crowdsourced version)
+- [] Sound classification to automatically reject duds (silent, wrong note)
+- [] Sound classification to add a `quality` float value, to preference higher-quality note recordings
+- [] Sound cropping before upload to remove any starting or ending silence

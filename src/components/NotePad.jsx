@@ -12,14 +12,18 @@ export default function NotePad({ notes }) {
 }
 
 const Section = styled("div")({
-  margin: "0 auto 3rem",
   padding: "2rem",
   backgroundColor: "white",
   borderRadius: "12px",
   boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-  display: "flex",
-  flexWrap: "wrap",
-  justifyContent: "center",
-  gap: "0.4rem",
-  maxWidth: "800px",
+
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(96px, 1fr))",
+  // gridTemplateColumns: "repeat(auto-fill, minmax(96px, 120px))",
+  // gridTemplateRows: "repeat(auto-fill, minmax(80px, 1fr))",
+  // gridTemplateRows: "repeat(auto-fill, minmax(80px, 120px))",
+  gridAutoRows: "80px",
+  gap: "1rem",
+  width: "100%",
+  justifyItems: "start",
 });
