@@ -1,6 +1,31 @@
 import { styled } from "@pigment-css/react";
 import { useState } from "react";
 
+export default function NoteButton({ note, onPlay, isPlaying = false }) {
+  const [isPressed, setIsPressed] = useState(false);
+
+  const handleClick = () => {
+    console.log(`NoteButton clicked: ${note}`);
+    onPlay(note);
+  };
+
+  const handleMouseDown = () => setIsPressed(true);
+  const handleMouseUp = () => setIsPressed(false);
+  const handleMouseLeave = () => setIsPressed(false);
+
+  return (
+    <StyledButton
+      className={`${isPressed ? "pressed" : ""} ${isPlaying ? "playing" : ""}`}
+      onClick={handleClick}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseLeave}
+    >
+      {note}
+    </StyledButton>
+  );
+}
+
 const StyledButton = styled("button")({
   margin: "0.4rem",
   padding: "0.8rem 1.2rem",
@@ -41,30 +66,3 @@ const StyledButton = styled("button")({
     "100%": { transform: "scale(1)" },
   },
 });
-
-function StyledMusicButton({ note, onPlay, isPlaying = false }) {
-  const [isPressed, setIsPressed] = useState(false);
-
-  const handleClick = () => {
-    console.log(`StyledMusicButton clicked: ${note}`);
-    onPlay(note);
-  };
-
-  const handleMouseDown = () => setIsPressed(true);
-  const handleMouseUp = () => setIsPressed(false);
-  const handleMouseLeave = () => setIsPressed(false);
-
-  return (
-    <StyledButton
-      className={`${isPressed ? "pressed" : ""} ${isPlaying ? "playing" : ""}`}
-      onClick={handleClick}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseLeave}
-    >
-      {note}
-    </StyledButton>
-  );
-}
-
-export default StyledMusicButton;

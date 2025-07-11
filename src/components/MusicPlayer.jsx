@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import * as Tone from "tone";
 import { transformNoteForDatabase } from "../utils/noteExtractor";
+import { styled } from "@pigment-css/react";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -16,13 +17,14 @@ function dbNoteToToneNote(dbNote) {
   return dbNote.charAt(0).toUpperCase() + dbNote.slice(1);
 }
 
-export default function SequentialPlayback() {
+export default function MusicPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [sampleUrls, setSampleUrls] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [melody, setMelody] = useState([]);
 
   // Load melody from JSON on mount
+  // TODO: Do this at App level because the notes in tracks[0] is also used in NotePad
   useEffect(() => {
     const loadMelody = async () => {
       const response = await fetch("/when-the-saints.json");
@@ -100,7 +102,8 @@ export default function SequentialPlayback() {
         maxWidth: 600,
       }}
     >
-      <h2>When the Saints (User Recordings Sampler)</h2>
+      <Title>Trill</Title>
+      <h2>When the Saints Go Marching In</h2>
       <button
         onClick={fetchSampleUrls}
         disabled={isLoading || isPlaying}
@@ -132,3 +135,8 @@ export default function SequentialPlayback() {
     </div>
   );
 }
+
+const Title = styled("h1")({
+  color: "#333",
+  marginBottom: "0.5rem",
+});
