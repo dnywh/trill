@@ -1,15 +1,25 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import * as Tone from "tone";
-import { transformNoteForDatabase } from "../utils/noteExtractor";
 import { styled } from "@pigment-css/react";
 
 const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
+  import.meta.env.VITE_SUPABASE_URL as string,
+  import.meta.env.VITE_SUPABASE_ANON_KEY as string
 );
 
-function dbNoteToToneNote(dbNote) {
+type MelodyNote = {
+  note: string;
+  duration: number;
+};
+
+type MusicPlayerProps = {
+  melody?: MelodyNote[];
+};
+
+type SampleUrls = Record<string, string>;
+
+function dbNoteToToneNote(dbNote: string): string {
   const match = dbNote.match(/^([a-g])sharp(\d)$/i);
   if (match) {
     return match[1].toUpperCase() + "#" + match[2];
@@ -17,16 +27,16 @@ function dbNoteToToneNote(dbNote) {
   return dbNote.charAt(0).toUpperCase() + dbNote.slice(1);
 }
 
-export default function MusicPlayer({ melody = [] }) {
+export default function MusicPlayer({ melody = [] }: MusicPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [sampleUrls, setSampleUrls] = useState({});
+  const [sampleUrls, setSampleUrls] = useState<SampleUrls>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [contributorCount, setContributorCount] = useState(null); // <-- Add this line
+  const [contributorCount, setContributorCount] = useState<
+    number | string | null
+  >(null);
 
-  // Fetch contributor count from Supabase
   useEffect(() => {
     async function fetchContributorCount() {
-      // This gets the count of unique contributor_id values
       const { count, error } = await supabase
         .from("recordings")
         .select("contributor_id", { count: "exact" })
@@ -41,7 +51,6 @@ export default function MusicPlayer({ melody = [] }) {
     fetchContributorCount();
   }, []);
 
-  // Fetch all available recordings and build the urls mapping
   const fetchSampleUrls = async () => {
     setIsLoading(true);
     const { data, error } = await supabase
@@ -52,8 +61,8 @@ export default function MusicPlayer({ melody = [] }) {
       setIsLoading(false);
       return;
     }
-    const urls = {};
-    data.forEach((rec) => {
+    const urls: SampleUrls = {};
+    (data as { note: string; filename: string }[]).forEach((rec) => {
       const note = dbNoteToToneNote(rec.note);
       urls[
         note
@@ -96,10 +105,7 @@ export default function MusicPlayer({ melody = [] }) {
     <Container>
       <Title>Trill</Title>
       <h2>When the Saints Go Marching In</h2>
-      <p>
-        Sampled from {contributorCount && contributorCount} contributors around
-        the world
-      </p>
+      <p>Sampled from {contributorCount} contributors around the world</p>
       <button
         onClick={fetchSampleUrls}
         disabled={isLoading || isPlaying}
@@ -118,28 +124,15 @@ export default function MusicPlayer({ melody = [] }) {
       >
         {isPlaying ? "Playing..." : "Play Song"}
       </button>
-      {/* <ul style={{ marginTop: 20, textAlign: "left" }}>
-        {Object.entries(sampleUrls).map(([note, url]) => (
-          <li key={note}>
-            {note}:{" "}
-            <a href={url} target="_blank" rel="noopener noreferrer">
-              Audio
-            </a>
-          </li>
-        ))}
-      </ul> */}
     </Container>
   );
 }
 
 const Container = styled("section")({
   aspectRatio: "1 / 1",
-  // minHeight: 0,
   padding: "2rem",
   background: "#fff",
   borderRadius: 12,
-  // boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-  // maxWidth: 600,
 });
 
 const Title = styled("h1")({

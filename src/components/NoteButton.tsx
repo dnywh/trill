@@ -5,41 +5,47 @@ import { createClient } from "@supabase/supabase-js";
 import { transformNoteForDatabase } from "../utils/noteExtractor";
 
 const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
+  import.meta.env.VITE_SUPABASE_URL as string,
+  import.meta.env.VITE_SUPABASE_ANON_KEY as string
 );
+
+type NoteButtonProps = {
+  note: string;
+  onPlay?: () => void;
+  isPlaying?: boolean;
+  contributorId: string;
+};
+
+type ButtonState = "idle" | "listening" | "recording" | "done";
 
 export default function NoteButton({
   note,
-  onPlay,
+  //   onPlay,
   isPlaying = false,
   contributorId,
-}) {
+}: NoteButtonProps) {
   const [isPressed, setIsPressed] = useState(false);
-  const [buttonState, setButtonState] = useState("idle"); // idle, listening, recording, done
-  const [synth, setSynth] = useState(null);
+  const [buttonState, setButtonState] = useState<ButtonState>("idle");
+  const [synth, setSynth] = useState<Tone.Synth | null>(null);
   const [isAudioStarted, setIsAudioStarted] = useState(false);
-  const mediaRecorderRef = useRef(null);
-  const recordingChunksRef = useRef([]);
-  const timeoutRef = useRef(null);
-  const recordingTimeoutRef = useRef(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordingChunksRef = useRef<Blob[]>([]);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const recordingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize synth on mount
   useEffect(() => {
     const newSynth = new Tone.Synth().toDestination();
     setSynth(newSynth);
   }, []);
 
-  const playNote = async (note) => {
+  const playNote = async (note: string) => {
     if (!synth) return;
-
     try {
       if (!isAudioStarted) {
         await Tone.start();
         setIsAudioStarted(true);
         console.log("Audio context started");
       }
-
       synth.triggerAttackRelease(note, "2n");
       console.log(`Playing note: ${note}`);
     } catch (error) {
@@ -51,12 +57,10 @@ export default function NoteButton({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
-      const chunks = [];
-
-      recorder.ondataavailable = (event) => {
+      const chunks: Blob[] = [];
+      recorder.ondataavailable = (event: BlobEvent) => {
         chunks.push(event.data);
       };
-
       recorder.onstop = async () => {
         console.log("onstop callback triggered");
         const blob = new Blob(chunks, { type: "audio/wav" });
@@ -64,15 +68,12 @@ export default function NoteButton({
         setButtonState("done");
         console.log(`Recording completed for ${note}`);
       };
-
       recorder.start();
       console.log(`Kicking off recording for ${note}`);
       mediaRecorderRef.current = recorder;
       recordingChunksRef.current = chunks;
       setButtonState("recording");
       console.log(`Started recording ${note}`);
-
-      // Stop recording after 3 seconds
       recordingTimeoutRef.current = setTimeout(() => {
         stopRecording();
       }, 3000);
@@ -98,37 +99,30 @@ export default function NoteButton({
     }
   };
 
-  const uploadRecording = async (blob) => {
+  const uploadRecording = async (blob: Blob) => {
     try {
       console.log("Uploading recording...");
       const dbNote = transformNoteForDatabase(note);
       const filename = `${Date.now()}-${Math.random()
         .toString(36)
         .substr(2, 9)}`;
-
-      // Upload to Supabase storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("recordings")
         .upload(`${dbNote}/${filename}.wav`, blob);
-
       if (uploadError) {
         console.error("Upload error:", uploadError);
         return;
       }
-
-      // Insert record into database
       const { error: dbError } = await supabase.from("recordings").insert({
         note: dbNote,
         filename: filename,
         created_at: new Date().toISOString(),
         contributor_id: contributorId,
       });
-
       if (dbError) {
         console.error("Database error:", dbError);
         return;
       }
-
       console.log(`Recording uploaded successfully for ${note}`);
     } catch (error) {
       console.error("Error uploading recording:", error);
@@ -136,15 +130,10 @@ export default function NoteButton({
   };
 
   const handleClick = async () => {
-    if (buttonState !== "idle") return; // Prevent multiple clicks during flow
-
+    if (buttonState !== "idle") return;
     console.log(`NoteButton clicked: ${note}`);
-
-    // Step 1: Play note and change text
     await playNote(note);
     setButtonState("listening");
-
-    // Step 2: Start recording after 1.5 seconds
     timeoutRef.current = setTimeout(() => {
       startRecording();
     }, 1500);
@@ -168,7 +157,7 @@ export default function NoteButton({
   };
 
   const getButtonClassName = () => {
-    const classes = [];
+    const classes: string[] = [];
     if (isPressed) classes.push("pressed");
     if (isPlaying) classes.push("playing");
     if (buttonState === "listening") classes.push("listening");
@@ -250,13 +239,5 @@ const StyledButton = styled("button")({
     background: "#4caf50",
     borderColor: "#4caf50",
     color: "white",
-  },
-  "&:active": {
-    transform: "translateY(1px)",
-  },
-  "@keyframes pulse": {
-    "0%": { transform: "scale(1)" },
-    "50%": { transform: "scale(1.05)" },
-    "100%": { transform: "scale(1)" },
   },
 });

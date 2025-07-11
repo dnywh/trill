@@ -22,8 +22,8 @@ const theme = extendTheme({
       },
     },
   },
-  getSelector: (colorScheme: string) => {
-    return `.${colorScheme}`;
+  getSelector: (colorScheme: string | undefined, _css: Record<string, any>) => {
+    return colorScheme ? `.${colorScheme}` : ":root";
   },
 });
 

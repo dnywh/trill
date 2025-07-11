@@ -24,3 +24,7 @@ Trill was a quick two day project. There are tonnes more things that could be do
 - [] Sound classification to automatically reject duds (silent, wrong note)
 - [] Sound classification to add a `quality` float value, to preference higher-quality note recordings
 - [] Sound cropping before upload to remove any starting or ending silence
+
+## Colophon
+
+This repo was borne out of the [Pigment CSS - Vite with TypeScript example project](https://github.com/mui/pigment-css/tree/master/examples/pigment-css-vite-ts).

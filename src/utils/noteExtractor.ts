@@ -1,8 +1,10 @@
 // Extract all unique notes from the MIDI data
-export function extractUniqueNotes(songData) {
+export function extractUniqueNotes(songData: {
+  tracks: { notes: { name: string }[] }[];
+}): string[] {
   if (!songData || !songData.tracks) return [];
 
-  const allNotes = new Set();
+  const allNotes = new Set<string>();
 
   songData.tracks.forEach((track) => {
     track.notes.forEach((note) => {
@@ -29,8 +31,10 @@ export function extractUniqueNotes(songData) {
     ];
     const aNote = a.replace(/\d/g, "");
     const bNote = b.replace(/\d/g, "");
-    const aOctave = parseInt(a.match(/\d/)[0]);
-    const bOctave = parseInt(b.match(/\d/)[0]);
+    const aMatch = a.match(/\d/);
+    const bMatch = b.match(/\d/);
+    const aOctave = aMatch ? parseInt(aMatch[0]) : 0;
+    const bOctave = bMatch ? parseInt(bMatch[0]) : 0;
 
     if (aOctave !== bOctave) {
       return aOctave - bOctave;
@@ -43,10 +47,12 @@ export function extractUniqueNotes(songData) {
 }
 
 // Get note statistics
-export function getNoteStats(songData) {
+export function getNoteStats(songData: {
+  tracks: { notes: { name: string }[] }[];
+}): Record<string, number> {
   if (!songData || !songData.tracks) return {};
 
-  const noteCounts = {};
+  const noteCounts: Record<string, number> = {};
 
   songData.tracks.forEach((track) => {
     track.notes.forEach((note) => {
@@ -59,7 +65,7 @@ export function getNoteStats(songData) {
 
 // Transform note names from MIDI format to database format
 // Examples: "C4" -> "c4", "F#2" -> "fsharp2", "C#3" -> "csharp3"
-export function transformNoteForDatabase(noteName) {
+export function transformNoteForDatabase(noteName: string): string {
   if (!noteName) return noteName;
 
   console.log(`Transforming note: ${noteName}`);

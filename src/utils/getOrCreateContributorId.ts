@@ -1,4 +1,4 @@
-export function getOrCreateContributorId() {
+export function getOrCreateContributorId(): string {
   let id = localStorage.getItem("trill_contributor_id");
   if (!id) {
     id = crypto.randomUUID();

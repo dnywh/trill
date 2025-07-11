@@ -1,14 +1,10 @@
 import { useState, useEffect } from "react";
-import * as Tone from "tone";
 import { styled } from "@pigment-css/react";
-// import TestComponent from "./components/TestComponent";
 import NotePad from "./components/NotePad";
-import NoteButton from "./components/NoteButton";
 import MusicPlayer from "./components/MusicPlayer";
-import { extractUniqueNotes, getNoteStats } from "./utils/noteExtractor";
 
 function App() {
-  const [notes, setNotes] = useState([]);
+  const [notes, setNotes] = useState<string[]>([]);
   const [melody, setMelody] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -20,13 +16,17 @@ function App() {
         const data = await response.json();
 
         // Extract unique notes from track 0 only
-        const track0Notes = data.tracks[0].notes.map((n) => ({
-          note: n.name,
-          duration: n.duration, // in seconds
-        }));
+        const track0Notes = data.tracks[0].notes.map(
+          (n: { name: string; duration: number }) => ({
+            note: n.name,
+            duration: n.duration, // in seconds
+          })
+        );
 
         // Get unique notes from track 0 for the NotePad
-        const uniqueNotes = [...new Set(track0Notes.map((n) => n.note))].sort();
+        const uniqueNotes = [
+          ...new Set(track0Notes.map((n: { note: string }) => n.note)),
+        ].sort() as string[];
 
         setMelody(track0Notes);
         setNotes(uniqueNotes);
