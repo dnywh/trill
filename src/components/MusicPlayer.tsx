@@ -37,14 +37,15 @@ export default function MusicPlayer({ melody = [] }: MusicPlayerProps) {
 
   useEffect(() => {
     async function fetchContributorCount() {
-      const { count, error } = await supabase
-        .from("recordings")
-        .select("contributor_id", { count: "exact" })
-        .not("contributor_id", "is", null);
+      const { data, error } = await supabase
+        .rpc("get_unique_contributor_count")
+        .single();
+
       if (error) {
-        console.error("Error fetching contributor count:", error);
-        setContributorCount("?");
+        console.error("Error fetching count:", error);
       } else {
+        const count = (data as { count: number } | null)?.count ?? 0;
+        console.log("Number of unique contributors:", count);
         setContributorCount(count);
       }
     }
