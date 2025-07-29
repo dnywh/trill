@@ -104,38 +104,72 @@ export default function MusicPlayer({ melody = [] }: MusicPlayerProps) {
 
   return (
     <Container>
-      <Title>Trill</Title>
-      <h2>When the Saints Go Marching In</h2>
-      <p>Sampled from {contributorCount} contributors around the world</p>
-      <button
-        onClick={fetchSampleUrls}
-        disabled={isLoading || isPlaying}
-        style={{ marginRight: 12, padding: "0.7rem 1.2rem", fontSize: "1rem" }}
-      >
-        {isLoading ? "Loading..." : "Fetch Recordings"}
-      </button>
-      <button
-        onClick={playMelody}
-        disabled={
-          isPlaying ||
-          Object.keys(sampleUrls).length === 0 ||
-          melody.length === 0
-        }
-        style={{ padding: "0.7rem 1.2rem", fontSize: "1rem" }}
-      >
-        {isPlaying ? "Playing..." : "Play Song"}
-      </button>
+      <PlaybackContainer>
+        <Title>Trill</Title>
+        <Controls>
+          <button
+            onClick={fetchSampleUrls}
+            disabled={isLoading || isPlaying}
+            style={{
+              marginRight: 12,
+              padding: "0.7rem 1.2rem",
+              fontSize: "1rem",
+            }}
+          >
+            {isLoading ? "Loading..." : "Fetch Recordings"}
+          </button>
+          <button
+            onClick={playMelody}
+            disabled={
+              isPlaying ||
+              Object.keys(sampleUrls).length === 0 ||
+              melody.length === 0
+            }
+            style={{ padding: "0.7rem 1.2rem", fontSize: "1rem" }}
+          >
+            {isPlaying ? "Playing..." : "Play Song"}
+          </button>
+        </Controls>
+        <Details>
+          <h2>When the Saints Go Marching In</h2>
+          <p>Sampled from {contributorCount} contributors around the world</p>
+        </Details>
+      </PlaybackContainer>
+      <Footer>
+        <p>
+          Built on <a href="https://supabase.com">Supabase</a> with 🧡 by{" "}
+          <a href="https://dannywhite.net">Danny</a>
+        </p>
+      </Footer>
     </Container>
   );
 }
 
 const Container = styled("section")({
+  height: "100%",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: "var(--padding-page)",
+  "@media (min-width: 768px)": {
+    position: "sticky",
+    top: "var(--padding-page)", // Match its starting position
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+});
+
+const PlaybackContainer = styled("div")({
+  position: "relative",
   aspectRatio: "1 / 1",
   padding: "2rem",
-  background: "#FF781F",
+  background: "var(--primary-color)",
   borderRadius: 12,
   width: "100%",
-  height: "100%", // Add this to ensure height constraint
+  maxWidth: "440px",
+  height: "100%", // Ensure height constraint
+  // maxHeight: "100%",
   "@media (min-width: 768px)": {
     minWidth: "440px",
     width: "50%",
@@ -145,6 +179,7 @@ const Container = styled("section")({
 });
 
 const Title = styled("h1")({
+  position: "absolute", // So it doesn't affect the play button and so on
   color: "rgba(0, 0, 0, 0.2)",
   marginBottom: "0.5rem",
   textTransform: "lowercase",
@@ -153,4 +188,45 @@ const Title = styled("h1")({
   fontWeight: 200,
   lineHeight: "100%",
   letterSpacing: "-0.05em",
+});
+
+const Controls = styled("div")({
+  background: "white",
+  padding: "1rem",
+  borderRadius: "12px",
+  position: "absolute",
+  top: "50%",
+  right: "50%",
+  transform: "translate(50%, -50%)",
+  display: "flex",
+  flexDirection: "column",
+  gap: "0.5rem",
+  // alignItems: "flex-end",
+});
+
+const Details = styled("div")({
+  position: "absolute",
+  bottom: "2rem",
+  right: "2rem",
+  display: "flex",
+  flexDirection: "column",
+  gap: "0.5rem",
+  alignItems: "flex-end",
+});
+
+const Footer = styled("footer")({
+  "& p": {
+    color: "var(--tertiary-color)",
+    textTransform: "uppercase",
+    fontSize: "0.8rem",
+    letterSpacing: "0.15em",
+    textAlign: "center",
+
+    "& a": {
+      transition: "color 0.2s ease-in-out",
+      "&:hover": {
+        color: "var(--primary-color)",
+      },
+    },
+  },
 });

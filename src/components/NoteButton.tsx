@@ -295,10 +295,11 @@ const StyledButton = styled("button")({
     opacity: 0.7,
   },
   "&.pressed": {
-    background: "#4a90e2",
-    color: "white",
+    background: "var(--button-color-pressed)",
+    // color: "white",
     transform: "translateY(1px)",
-    boxShadow: "0 2px 4px rgba(74, 144, 226, 0.3)",
+    boxShadow:
+      "0 1px 0 1px rgba(0, 0, 0, 0.02), 0 1px 0.5px 2px rgba(0, 0, 0, 0.05) inset",
   },
   "&.playing": {
     background: "#4caf50",
@@ -335,18 +336,17 @@ const StyledButton = styled("button")({
   },
   "&.success": {
     background: "white",
-    borderColor: "#4caf50",
-    color: "#4caf50",
+    borderColor: "var(--state-color-success)",
     position: "relative",
     "&::after": {
       content: '""',
       position: "absolute",
       top: "8px",
-      right: "8px",
-      width: "12px",
-      height: "12px",
+      left: "8px",
+      width: "6px",
+      height: "6px",
       borderRadius: "50%",
-      background: "#4caf50",
+      background: "var(--state-color-success)",
     },
   },
   "&.failed": {

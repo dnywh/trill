@@ -62,12 +62,11 @@ function App() {
 export default App;
 
 const AppContainer = styled("div")({
-  // fontFamily: '"IBM Plex Sans Condensed", sans-serif',
-  padding: "2rem",
+  padding: "var(--padding-page)",
   minHeight: "100vh",
   display: "flex",
   flexDirection: "column",
-  gap: "2rem",
+  gap: "var(--padding-page)",
   "@media (min-width: 768px)": {
     flexDirection: "row",
   },

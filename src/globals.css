@@ -4,6 +4,9 @@
   --primary-color: #ff781f;
   --secondary-color: #333;
   --tertiary-color: #707070;
+  --button-color-pressed: #eaeaea;
+  --state-color-success: #7af286;
+  --padding-page: 2rem;
 }
 
 /* CSS Reset */
