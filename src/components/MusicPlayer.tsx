@@ -145,6 +145,12 @@ const Container = styled("section")({
 });
 
 const Title = styled("h1")({
-  color: "#333",
+  color: "rgba(0, 0, 0, 0.2)",
   marginBottom: "0.5rem",
+  textTransform: "lowercase",
+  fontSize: "4rem",
+  fontStyle: "italic",
+  fontWeight: 200,
+  lineHeight: "100%",
+  letterSpacing: "-0.05em",
 });

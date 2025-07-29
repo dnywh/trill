@@ -62,7 +62,7 @@ function App() {
 export default App;
 
 const AppContainer = styled("div")({
-  fontFamily: "sans-serif",
+  // fontFamily: '"IBM Plex Sans Condensed", sans-serif',
   padding: "2rem",
   minHeight: "100vh",
   display: "flex",

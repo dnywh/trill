@@ -284,9 +284,11 @@ const StyledButton = styled("button")({
   boxShadow:
     "0 1px 0 1px rgba(0, 0, 0, 0.02), 0 1.5px 0 2px rgba(0, 0, 0, 0.01)",
   "&:hover": {
-    background: "#e3f2fd",
-    transform: "translateY(-1px)",
-    boxShadow: "0 4px 8px rgba(74, 144, 226, 0.2)",
+    // background: "#e3f2fd",
+    transform: "translateY(-2px)",
+    color: "var(--primary-color)",
+    boxShadow:
+      "0 3px 1px 1px rgba(0, 0, 0, 0.06), 0 4px 5px 2px rgba(0, 0, 0, 0.04)",
   },
   "&:disabled": {
     cursor: "not-allowed",

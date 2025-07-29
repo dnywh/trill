@@ -1,14 +1,55 @@
+/* Variables */
+:root {
+  --background-color: #f7f7f7;
+  --primary-color: #ff781f;
+  --secondary-color: #333;
+  --tertiary-color: #707070;
+}
+
+/* CSS Reset */
 * {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
 }
 
+/* Reset form elements to inherit font */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Reset button styles */
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+}
+
+/* Reset list styles */
+ul,
+ol {
+  list-style: none;
+}
+
+/* Reset link styles */
 a {
   color: inherit;
   text-decoration: none;
 }
 
+/* Set base styles for the entire app */
 html {
-  background: #f7f7f7;
+  background: var(--background-color);
+  font-family: "IBM Plex Sans Condensed", sans-serif;
+}
+
+body {
+  font-family: "IBM Plex Sans Condensed", sans-serif;
 }
