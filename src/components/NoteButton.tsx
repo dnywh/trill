@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 import * as Tone from "tone";
 import { createClient } from "@supabase/supabase-js";
 import { transformNoteForDatabase } from "../utils/noteExtractor";
+import { checkAudioQuality } from "../utils/audioQualityCheck";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL as string,
@@ -16,7 +17,14 @@ type NoteButtonProps = {
   contributorId: string;
 };
 
-type ButtonState = "idle" | "listening" | "recording" | "done";
+type ButtonState =
+  | "idle"
+  | "listening"
+  | "recording"
+  | "checking"
+  | "thanks"
+  | "done"
+  | "failed";
 
 export default function NoteButton({
   note,
@@ -28,14 +36,29 @@ export default function NoteButton({
   const [buttonState, setButtonState] = useState<ButtonState>("idle");
   const [synth, setSynth] = useState<Tone.Synth | null>(null);
   const [isAudioStarted, setIsAudioStarted] = useState(false);
+  const [failureMessage, setFailureMessage] = useState<string>("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordingChunksRef = useRef<Blob[]>([]);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const recordingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const failedTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const newSynth = new Tone.Synth().toDestination();
     setSynth(newSynth);
+
+    // Cleanup function
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      if (recordingTimeoutRef.current) {
+        clearTimeout(recordingTimeoutRef.current);
+      }
+      if (failedTimeoutRef.current) {
+        clearTimeout(failedTimeoutRef.current);
+      }
+    };
   }, []);
 
   const playNote = async (note: string) => {
@@ -64,8 +87,8 @@ export default function NoteButton({
       recorder.onstop = async () => {
         console.log("onstop callback triggered");
         const blob = new Blob(chunks, { type: "audio/wav" });
+        setButtonState("checking");
         await uploadRecording(blob);
-        setButtonState("done");
         console.log(`Recording completed for ${note}`);
       };
       recorder.start();
@@ -101,7 +124,34 @@ export default function NoteButton({
 
   const uploadRecording = async (blob: Blob) => {
     try {
-      console.log("Uploading recording...");
+      console.log("Checking audio quality...");
+
+      // Check audio quality before uploading
+      const qualityResult = await checkAudioQuality(blob, note);
+      console.log("Quality check result:", qualityResult);
+
+      if (!qualityResult.isMatch) {
+        console.log("Audio quality check failed:", qualityResult.message);
+        setFailureMessage(qualityResult.message);
+        setButtonState("failed");
+
+        // Reset to idle state after 3 seconds
+        failedTimeoutRef.current = setTimeout(() => {
+          setButtonState("idle");
+          setFailureMessage("");
+        }, 3000);
+
+        return;
+      }
+
+      setButtonState("thanks");
+
+      // Transition to done state after 3 seconds
+      setTimeout(() => {
+        setButtonState("done");
+      }, 3000);
+
+      console.log("Audio quality check passed, uploading recording...");
       const dbNote = transformNoteForDatabase(note);
       const filename = `${Date.now()}-${Math.random()
         .toString(36)
@@ -130,10 +180,25 @@ export default function NoteButton({
   };
 
   const handleClick = async () => {
-    if (buttonState !== "idle") return;
+    if (
+      buttonState !== "idle" &&
+      buttonState !== "failed" &&
+      buttonState !== "listening" &&
+      buttonState !== "done" &&
+      buttonState !== "thanks"
+    )
+      return;
+
+    // Clear any existing failed timeout
+    if (failedTimeoutRef.current) {
+      clearTimeout(failedTimeoutRef.current);
+      failedTimeoutRef.current = null;
+    }
+
     console.log(`NoteButton clicked: ${note}`);
     await playNote(note);
     setButtonState("listening");
+    setFailureMessage("");
     timeoutRef.current = setTimeout(() => {
       startRecording();
     }, 1500);
@@ -149,8 +214,14 @@ export default function NoteButton({
         return "Sing this tune";
       case "recording":
         return "Keep singing...";
+      case "checking":
+        return "Checking...";
+      case "thanks":
+        return "Thanks!";
       case "done":
-        return "Added!";
+        return note;
+      case "failed":
+        return failureMessage || "Try again";
       default:
         return note;
     }
@@ -162,7 +233,10 @@ export default function NoteButton({
     if (isPlaying) classes.push("playing");
     if (buttonState === "listening") classes.push("listening");
     if (buttonState === "recording") classes.push("recording");
+    if (buttonState === "checking") classes.push("checking");
+    if (buttonState === "thanks") classes.push("thanks");
     if (buttonState === "done") classes.push("done");
+    if (buttonState === "failed") classes.push("failed");
     return classes.join(" ");
   };
 
@@ -173,7 +247,13 @@ export default function NoteButton({
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseLeave}
-      disabled={buttonState !== "idle"}
+      disabled={
+        buttonState !== "idle" &&
+        buttonState !== "failed" &&
+        buttonState !== "listening" &&
+        buttonState !== "done" &&
+        buttonState !== "thanks"
+      }
     >
       {getButtonText()}
     </StyledButton>
@@ -235,9 +315,38 @@ const StyledButton = styled("button")({
     animation: "pulse 0.5s infinite",
     fontSize: "13px",
   },
-  "&.done": {
+  "&.checking": {
+    background: "#ff9800",
+    borderColor: "#ff9800",
+    color: "white",
+    animation: "pulse 1s infinite",
+    fontSize: "13px",
+  },
+  "&.thanks": {
     background: "#4caf50",
     borderColor: "#4caf50",
+    color: "white",
+    animation: "pulse 0.6s ease-in-out",
+  },
+  "&.done": {
+    background: "white",
+    borderColor: "#4caf50",
+    color: "#4caf50",
+    position: "relative",
+    "&::after": {
+      content: '""',
+      position: "absolute",
+      top: "8px",
+      right: "8px",
+      width: "12px",
+      height: "12px",
+      borderRadius: "50%",
+      background: "#4caf50",
+    },
+  },
+  "&.failed": {
+    background: "#f44336",
+    borderColor: "#f44336",
     color: "white",
   },
 });

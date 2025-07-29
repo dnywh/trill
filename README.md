@@ -12,9 +12,11 @@ This makes it so anyone on the internet can contribute to the Trill project: a c
 Clone the repo and run:
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
+
+You’ll need to also copy over `.env.example` to a new `.env` file with values.
 
 ## Later
 
