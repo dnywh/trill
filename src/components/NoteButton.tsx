@@ -23,7 +23,7 @@ type ButtonState =
   | "recording"
   | "checking"
   | "thanks"
-  | "done"
+  | "success"
   | "failed";
 
 export default function NoteButton({
@@ -148,7 +148,7 @@ export default function NoteButton({
 
       // Transition to done state after 3 seconds
       setTimeout(() => {
-        setButtonState("done");
+        setButtonState("success");
       }, 3000);
 
       console.log("Audio quality check passed, uploading recording...");
@@ -184,7 +184,7 @@ export default function NoteButton({
       buttonState !== "idle" &&
       buttonState !== "failed" &&
       buttonState !== "listening" &&
-      buttonState !== "done" &&
+      buttonState !== "success" &&
       buttonState !== "thanks"
     )
       return;
@@ -217,8 +217,8 @@ export default function NoteButton({
       case "checking":
         return "Checking...";
       case "thanks":
-        return "Thanks!";
-      case "done":
+        return "Done";
+      case "success":
         return note;
       case "failed":
         return failureMessage || "Try again";
@@ -235,7 +235,7 @@ export default function NoteButton({
     if (buttonState === "recording") classes.push("recording");
     if (buttonState === "checking") classes.push("checking");
     if (buttonState === "thanks") classes.push("thanks");
-    if (buttonState === "done") classes.push("done");
+    if (buttonState === "success") classes.push("success");
     if (buttonState === "failed") classes.push("failed");
     return classes.join(" ");
   };
@@ -250,8 +250,8 @@ export default function NoteButton({
       disabled={
         buttonState !== "idle" &&
         buttonState !== "failed" &&
-        buttonState !== "listening" &&
-        buttonState !== "done" &&
+        // buttonState !== "listening" &&
+        buttonState !== "success" &&
         buttonState !== "thanks"
       }
     >
@@ -328,7 +328,7 @@ const StyledButton = styled("button")({
     color: "white",
     animation: "pulse 0.6s ease-in-out",
   },
-  "&.done": {
+  "&.success": {
     background: "white",
     borderColor: "#4caf50",
     color: "#4caf50",
