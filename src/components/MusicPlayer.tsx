@@ -52,35 +52,40 @@ export default function MusicPlayer({ melody = [] }: MusicPlayerProps) {
     fetchContributorCount();
   }, []);
 
-  const fetchSampleUrls = async () => {
-    setIsLoading(true);
-    const { data, error } = await supabase
-      .from("recordings")
-      .select("note, filename");
-    if (error) {
-      console.error("Supabase fetch error:", error);
-      setIsLoading(false);
-      return;
-    }
-    const urls: SampleUrls = {};
-    (data as { note: string; filename: string }[]).forEach((rec) => {
-      const note = dbNoteToToneNote(rec.note);
-      urls[
-        note
-      ] = `https://tlyohnvvixywznonvgwj.supabase.co/storage/v1/object/public/recordings/${rec.note}/${rec.filename}.wav`;
-    });
-    setSampleUrls(urls);
-    setIsLoading(false);
-    console.log("Sample URLs:", urls);
-  };
-
   const playMelody = async () => {
     setIsPlaying(true);
+
+    // Fetch sample URLs if we don't have them yet
+    let currentSampleUrls = sampleUrls;
+    if (Object.keys(currentSampleUrls).length === 0) {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from("recordings")
+        .select("note, filename");
+      if (error) {
+        console.error("Supabase fetch error:", error);
+        setIsLoading(false);
+        setIsPlaying(false);
+        return;
+      }
+      const urls: SampleUrls = {};
+      (data as { note: string; filename: string }[]).forEach((rec) => {
+        const note = dbNoteToToneNote(rec.note);
+        urls[
+          note
+        ] = `https://tlyohnvvixywznonvgwj.supabase.co/storage/v1/object/public/recordings/${rec.note}/${rec.filename}.wav`;
+      });
+      setSampleUrls(urls);
+      currentSampleUrls = urls;
+      setIsLoading(false);
+      console.log("Sample URLs:", urls);
+    }
+
     await Tone.start();
     console.log("Audio context started");
 
     const sampler = new Tone.Sampler({
-      urls: sampleUrls,
+      urls: currentSampleUrls,
       release: 1,
     }).toDestination();
 
@@ -89,7 +94,7 @@ export default function MusicPlayer({ melody = [] }: MusicPlayerProps) {
 
     for (let i = 0; i < melody.length; i++) {
       const { note, duration } = melody[i];
-      if (!sampleUrls[note]) {
+      if (!currentSampleUrls[note]) {
         console.warn(`No sample for ${note}, skipping`);
         continue;
       }
@@ -106,30 +111,12 @@ export default function MusicPlayer({ melody = [] }: MusicPlayerProps) {
     <Container>
       <PlaybackContainer>
         <Title>Trill</Title>
-        <Controls>
-          <button
-            onClick={fetchSampleUrls}
-            disabled={isLoading || isPlaying}
-            style={{
-              marginRight: 12,
-              padding: "0.7rem 1.2rem",
-              fontSize: "1rem",
-            }}
-          >
-            {isLoading ? "Loading..." : "Fetch Recordings"}
-          </button>
-          <button
-            onClick={playMelody}
-            disabled={
-              isPlaying ||
-              Object.keys(sampleUrls).length === 0 ||
-              melody.length === 0
-            }
-            style={{ padding: "0.7rem 1.2rem", fontSize: "1rem" }}
-          >
-            {isPlaying ? "Playing..." : "Play Song"}
-          </button>
-        </Controls>
+        <PlayButton
+          onClick={playMelody}
+          disabled={isPlaying || melody.length === 0}
+        >
+          {isPlaying ? (isLoading ? "Loading..." : "Playing...") : "Play Song"}
+        </PlayButton>
         <Details>
           <h2>When the Saints Go Marching In</h2>
           <p>Sampled from {contributorCount} contributors around the world</p>
@@ -165,6 +152,7 @@ const PlaybackContainer = styled("div")({
   aspectRatio: "1 / 1",
   padding: "2rem",
   background: "var(--primary-color)",
+  boxShadow: "0 2px 0px 0px rgba(0, 0, 0, 0.045)",
   borderRadius: 12,
   width: "100%",
   maxWidth: "440px",
@@ -190,19 +178,43 @@ const Title = styled("h1")({
   letterSpacing: "-0.05em",
 });
 
-const Controls = styled("div")({
-  background: "white",
-  padding: "1rem",
-  borderRadius: "12px",
+const PlayButton = styled("button")({
   position: "absolute",
   top: "50%",
   right: "50%",
   transform: "translate(50%, -50%)",
+  background: "var(--spot-color)",
+  width: "12rem",
+  height: "12rem",
+  color: "black",
+  borderRadius: "50%",
+  padding: "0.7rem",
+  fontSize: "1rem",
   display: "flex",
-  flexDirection: "column",
-  gap: "0.5rem",
-  // alignItems: "flex-end",
+  alignItems: "center",
+  justifyContent: "center",
+  boxShadow: "0 2px 0px 0px rgba(0, 0, 0, 0.045)",
+  "&:hover": {
+    // transform: "scale(1.05)",
+  },
+  "&:active": {
+    // transform: "scale(0.95)",
+  },
 });
+
+// const Controls = styled("div")({
+//   background: "var(--spot-color)",
+//   padding: "1rem",
+//   borderRadius: "12px",
+//   position: "absolute",
+//   top: "50%",
+//   right: "50%",
+//   transform: "translate(50%, -50%)",
+//   display: "flex",
+//   flexDirection: "column",
+//   gap: "0.5rem",
+//   // alignItems: "flex-end",
+// });
 
 const Details = styled("div")({
   position: "absolute",
@@ -223,7 +235,7 @@ const Footer = styled("footer")({
     textAlign: "center",
 
     "& a": {
-      transition: "color 0.2s ease-in-out",
+      transition: "color 0.1s ease-in-out",
       "&:hover": {
         color: "var(--primary-color)",
       },
