@@ -7,6 +7,7 @@ function App() {
   const [notes, setNotes] = useState<string[]>([]);
   const [melody, setMelody] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRecording, setIsRecording] = useState(false);
 
   // Load song data and extract notes from track 0
   useEffect(() => {
@@ -43,6 +44,20 @@ function App() {
     loadSongData();
   }, []);
 
+  const handleRecordingStart = () => {
+    console.log("Recording started");
+    setIsRecording(true);
+  };
+
+  const handleRecordingEnd = () => {
+    console.log("Recording ended");
+    setIsRecording(false);
+  };
+
+  const handlePlaybackStateChange = (isPlaying: boolean) => {
+    console.log("Playback state changed:", isPlaying);
+  };
+
   if (isLoading) {
     return (
       <AppContainer>
@@ -53,8 +68,16 @@ function App() {
 
   return (
     <AppContainer>
-      <MusicPlayer melody={melody} />
-      <NotePad notes={notes} />
+      <MusicPlayer
+        melody={melody}
+        isRecording={isRecording}
+        onPlaybackStateChange={handlePlaybackStateChange}
+      />
+      <NotePad
+        notes={notes}
+        onRecordingStart={handleRecordingStart}
+        onRecordingEnd={handleRecordingEnd}
+      />
     </AppContainer>
   );
 }

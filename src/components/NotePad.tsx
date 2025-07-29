@@ -4,14 +4,26 @@ import { styled } from "@pigment-css/react";
 
 interface NotePadProps {
   notes: string[];
+  onRecordingStart?: () => void;
+  onRecordingEnd?: () => void;
 }
 
-export default function NotePad({ notes }: NotePadProps) {
+export default function NotePad({
+  notes,
+  onRecordingStart,
+  onRecordingEnd,
+}: NotePadProps) {
   const contributorId = getOrCreateContributorId();
   return (
     <Section>
       {notes.map((note, index) => (
-        <NoteButton key={index} note={note} contributorId={contributorId} />
+        <NoteButton
+          key={index}
+          note={note}
+          contributorId={contributorId}
+          onRecordingStart={onRecordingStart}
+          onRecordingEnd={onRecordingEnd}
+        />
       ))}
     </Section>
   );

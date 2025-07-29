@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 import * as Tone from "tone";
-import { styled } from "@pigment-css/react";
+import { styled, keyframes } from "@pigment-css/react";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL as string,
@@ -15,6 +15,8 @@ type MelodyNote = {
 
 type MusicPlayerProps = {
   melody?: MelodyNote[];
+  isRecording?: boolean;
+  onPlaybackStateChange?: (isPlaying: boolean) => void;
 };
 
 type SampleUrls = Record<string, string>;
@@ -27,13 +29,40 @@ function dbNoteToToneNote(dbNote: string): string {
   return dbNote.charAt(0).toUpperCase() + dbNote.slice(1);
 }
 
-export default function MusicPlayer({ melody = [] }: MusicPlayerProps) {
+// SVG Icon Components
+const PlayIcon = () => (
+  <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M8 5v14l11-7z" />
+  </svg>
+);
+
+const PauseIcon = () => (
+  <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+  </svg>
+);
+
+export default function MusicPlayer({
+  melody = [],
+  isRecording = false,
+  onPlaybackStateChange,
+}: MusicPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [sampleUrls, setSampleUrls] = useState<SampleUrls>({});
   const [isLoading, setIsLoading] = useState(false);
   const [contributorCount, setContributorCount] = useState<
     number | string | null
   >(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const playbackRef = useRef<{
+    sampler: Tone.Sampler | null;
+    currentIndex: number;
+    timeoutId: NodeJS.Timeout | null;
+  }>({
+    sampler: null,
+    currentIndex: 0,
+    timeoutId: null,
+  });
 
   useEffect(() => {
     async function fetchContributorCount() {
@@ -52,8 +81,95 @@ export default function MusicPlayer({ melody = [] }: MusicPlayerProps) {
     fetchContributorCount();
   }, []);
 
+  // Stop playback when recording starts
+  useEffect(() => {
+    if (isRecording && isPlaying) {
+      stopPlayback();
+    }
+  }, [isRecording]);
+
+  const stopPlayback = () => {
+    if (playbackRef.current.timeoutId) {
+      clearTimeout(playbackRef.current.timeoutId);
+      playbackRef.current.timeoutId = null;
+    }
+    if (playbackRef.current.sampler) {
+      playbackRef.current.sampler.dispose();
+      playbackRef.current.sampler = null;
+    }
+    setIsPlaying(false);
+    setIsPaused(false);
+    playbackRef.current.currentIndex = 0;
+    onPlaybackStateChange?.(false);
+    console.log("Playback stopped");
+  };
+
+  const pausePlayback = () => {
+    if (playbackRef.current.timeoutId) {
+      clearTimeout(playbackRef.current.timeoutId);
+      playbackRef.current.timeoutId = null;
+    }
+    setIsPaused(true);
+    onPlaybackStateChange?.(false);
+    console.log("Playback paused");
+  };
+
+  const resumePlayback = async () => {
+    if (
+      !playbackRef.current.sampler ||
+      playbackRef.current.currentIndex >= melody.length
+    ) {
+      return;
+    }
+
+    setIsPaused(false);
+    onPlaybackStateChange?.(true);
+    console.log(
+      "Resuming playback from index:",
+      playbackRef.current.currentIndex
+    );
+
+    // Continue playback from current index
+    for (let i = playbackRef.current.currentIndex; i < melody.length; i++) {
+      const { note, duration } = melody[i];
+      if (!sampleUrls[note]) {
+        console.warn(`No sample for ${note}, skipping`);
+        continue;
+      }
+      console.log(`Playing ${note} for ${duration}s`);
+      playbackRef.current.sampler!.triggerAttackRelease(note, duration);
+      playbackRef.current.currentIndex = i + 1;
+
+      if (i < melody.length - 1) {
+        await new Promise((res) => {
+          playbackRef.current.timeoutId = setTimeout(res, duration * 1000);
+        });
+      }
+    }
+
+    // Playback finished
+    setIsPlaying(false);
+    setIsPaused(false);
+    playbackRef.current.currentIndex = 0;
+    onPlaybackStateChange?.(false);
+    console.log("Finished playback");
+  };
+
   const playMelody = async () => {
+    // If paused, resume playback
+    if (isPaused) {
+      resumePlayback();
+      return;
+    }
+
+    // If already playing, pause
+    if (isPlaying) {
+      pausePlayback();
+      return;
+    }
+
     setIsPlaying(true);
+    onPlaybackStateChange?.(true);
 
     // Fetch sample URLs if we don't have them yet
     let currentSampleUrls = sampleUrls;
@@ -66,6 +182,7 @@ export default function MusicPlayer({ melody = [] }: MusicPlayerProps) {
         console.error("Supabase fetch error:", error);
         setIsLoading(false);
         setIsPlaying(false);
+        onPlaybackStateChange?.(false);
         return;
       }
       const urls: SampleUrls = {};
@@ -89,6 +206,9 @@ export default function MusicPlayer({ melody = [] }: MusicPlayerProps) {
       release: 1,
     }).toDestination();
 
+    playbackRef.current.sampler = sampler;
+    playbackRef.current.currentIndex = 0;
+
     await Tone.loaded();
     console.log("Samples loaded");
 
@@ -100,10 +220,20 @@ export default function MusicPlayer({ melody = [] }: MusicPlayerProps) {
       }
       console.log(`Playing ${note} for ${duration}s`);
       sampler.triggerAttackRelease(note, duration);
-      await new Promise((res) => setTimeout(res, duration * 1000));
+      playbackRef.current.currentIndex = i + 1;
+
+      if (i < melody.length - 1) {
+        await new Promise((res) => {
+          playbackRef.current.timeoutId = setTimeout(res, duration * 1000);
+        });
+      }
     }
 
+    // Playback finished
     setIsPlaying(false);
+    setIsPaused(false);
+    playbackRef.current.currentIndex = 0;
+    onPlaybackStateChange?.(false);
     console.log("Finished playback");
   };
 
@@ -113,9 +243,12 @@ export default function MusicPlayer({ melody = [] }: MusicPlayerProps) {
         <Title>Trill</Title>
         <PlayButton
           onClick={playMelody}
-          disabled={isPlaying || melody.length === 0}
+          disabled={isLoading || melody.length === 0 || isRecording}
+          isLoading={isLoading}
+          isPlaying={isPlaying}
+          isPaused={isPaused}
         >
-          {isPlaying ? (isLoading ? "Loading..." : "Playing...") : "Play Song"}
+          {isLoading ? <PlayIcon /> : isPaused ? <PlayIcon /> : <PauseIcon />}
         </PlayButton>
         <Details>
           <h2>When the Saints Go Marching In</h2>
@@ -178,7 +311,21 @@ const Title = styled("h1")({
   letterSpacing: "-0.05em",
 });
 
-const PlayButton = styled("button")({
+const playButtonAnimation = keyframes({
+  from: {
+    transform: "translate(50%, -50%) scale(1)",
+  },
+  to: {
+    transform: "translate(50%, -50%) scale(1.1)",
+  },
+});
+
+const PlayButton = styled("button")<{
+  isLoading: boolean;
+  isPlaying: boolean;
+  isPaused: boolean;
+}>(() => ({
+  zIndex: 1,
   position: "absolute",
   top: "50%",
   right: "50%",
@@ -194,13 +341,30 @@ const PlayButton = styled("button")({
   alignItems: "center",
   justifyContent: "center",
   boxShadow: "0 2px 0px 0px rgba(0, 0, 0, 0.045)",
-  "&:hover": {
-    // transform: "scale(1.05)",
-  },
-  "&:active": {
-    // transform: "scale(0.95)",
-  },
-});
+  transition: "transform 0.2s ease-in-out",
+  animation: "none",
+
+  variants: [
+    {
+      props: { isLoading: true },
+      style: {
+        animation: `${playButtonAnimation} 1.5s ease-in-out infinite`,
+      },
+    },
+    {
+      props: { isPlaying: true },
+      style: {
+        animation: "none",
+      },
+    },
+    {
+      props: { isPaused: true },
+      style: {
+        animation: "none",
+      },
+    },
+  ],
+}));
 
 // const Controls = styled("div")({
 //   background: "var(--spot-color)",

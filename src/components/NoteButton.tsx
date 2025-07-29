@@ -15,6 +15,8 @@ type NoteButtonProps = {
   onPlay?: () => void;
   isPlaying?: boolean;
   contributorId: string;
+  onRecordingStart?: () => void;
+  onRecordingEnd?: () => void;
 };
 
 type ButtonState =
@@ -31,6 +33,8 @@ export default function NoteButton({
   //   onPlay,
   isPlaying = false,
   contributorId,
+  onRecordingStart,
+  onRecordingEnd,
 }: NoteButtonProps) {
   const [isPressed, setIsPressed] = useState(false);
   const [buttonState, setButtonState] = useState<ButtonState>("idle");
@@ -96,6 +100,7 @@ export default function NoteButton({
       mediaRecorderRef.current = recorder;
       recordingChunksRef.current = chunks;
       setButtonState("recording");
+      onRecordingStart?.();
       console.log(`Started recording ${note}`);
       recordingTimeoutRef.current = setTimeout(() => {
         stopRecording();
@@ -120,6 +125,7 @@ export default function NoteButton({
       clearTimeout(recordingTimeoutRef.current);
       recordingTimeoutRef.current = null;
     }
+    onRecordingEnd?.();
   };
 
   const uploadRecording = async (blob: Blob) => {
