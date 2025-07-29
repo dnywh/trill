@@ -247,8 +247,9 @@ export default function MusicPlayer({
           isLoading={isLoading}
           isPlaying={isPlaying}
           isPaused={isPaused}
+          test="foo"
         >
-          {isLoading ? <PlayIcon /> : isPaused ? <PlayIcon /> : <PauseIcon />}
+          {isLoading ? <PlayIcon /> : isPlaying ? <PauseIcon /> : <PlayIcon />}
         </PlayButton>
         <Details>
           <h2>When the Saints Go Marching In</h2>
@@ -320,10 +321,20 @@ const playButtonAnimation = keyframes({
   },
 });
 
+const playButtonRotateAnimation = keyframes({
+  from: {
+    transform: "translate(50%, -50%) rotate(0deg)",
+  },
+  to: {
+    transform: "translate(50%, -50%) rotate(360deg)",
+  },
+});
+
 const PlayButton = styled("button")<{
   isLoading: boolean;
   isPlaying: boolean;
   isPaused: boolean;
+  test: string;
 }>(() => ({
   zIndex: 1,
   position: "absolute",
@@ -354,7 +365,7 @@ const PlayButton = styled("button")<{
     {
       props: { isPlaying: true },
       style: {
-        animation: "none",
+        animation: `${playButtonRotateAnimation} 5s linear infinite`,
       },
     },
     {
