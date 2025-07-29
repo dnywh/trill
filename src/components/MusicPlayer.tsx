@@ -42,6 +42,42 @@ const PauseIcon = () => (
   </svg>
 );
 
+function CircularText({
+  text,
+  radius = 80,
+  startAngle = -90,
+  endAngle = 90,
+}: {
+  text: string;
+  radius?: number;
+  startAngle?: number;
+  endAngle?: number;
+}) {
+  const characters = text.split("");
+  const angleStep = (endAngle - startAngle) / (characters.length - 1);
+
+  return (
+    <CircularTextContainer>
+      {characters.map((char, index) => {
+        const angle = startAngle + angleStep * index;
+        const x = Math.cos((angle * Math.PI) / 180) * radius;
+        const y = Math.sin((angle * Math.PI) / 180) * radius;
+
+        return (
+          <CircularCharacter
+            key={index}
+            style={{
+              transform: `translate(${x}px, ${y}px) rotate(${angle + 90}deg)`,
+            }}
+          >
+            {char}
+          </CircularCharacter>
+        );
+      })}
+    </CircularTextContainer>
+  );
+}
+
 export default function MusicPlayer({
   melody = [],
   isRecording = false,
@@ -248,11 +284,17 @@ export default function MusicPlayer({
           isPlaying={isPlaying}
           isPaused={isPaused}
           test="foo"
+          aria-label="Play When the Saints Go Marching In"
         >
           {isLoading ? <PlayIcon /> : isPlaying ? <PauseIcon /> : <PlayIcon />}
+          <CircularText
+            text="When the Saints Go Marching In"
+            radius={86}
+            startAngle={-160}
+            endAngle={80}
+          />
         </PlayButton>
         <Details>
-          <h2>When the Saints Go Marching In</h2>
           <p>Sampled from {contributorCount} contributors around the world</p>
         </Details>
       </PlaybackContainer>
@@ -342,8 +384,8 @@ const PlayButton = styled("button")<{
   right: "50%",
   transform: "translate(50%, -50%)",
   background: "var(--spot-color)",
-  width: "12rem",
-  height: "12rem",
+  width: "14rem",
+  height: "14rem",
   color: "black",
   borderRadius: "50%",
   padding: "0.7rem",
@@ -365,7 +407,7 @@ const PlayButton = styled("button")<{
     {
       props: { isPlaying: true },
       style: {
-        animation: `${playButtonRotateAnimation} 5s linear infinite`,
+        animation: `${playButtonRotateAnimation} 10s linear infinite`,
       },
     },
     {
@@ -376,6 +418,29 @@ const PlayButton = styled("button")<{
     },
   ],
 }));
+
+const CircularTextContainer = styled("div")({
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: "0",
+  height: "0",
+  pointerEvents: "none",
+});
+
+const CircularCharacter = styled("span")({
+  position: "absolute",
+  fontSize: "0.7rem",
+  fontWeight: "500",
+  color: "var(--tertiary-color)",
+  opacity: 0.7,
+  textTransform: "uppercase",
+  letterSpacing: "-0.7em",
+  transformOrigin: "center",
+  userSelect: "none",
+  lineHeight: "0",
+});
 
 // const Controls = styled("div")({
 //   background: "var(--spot-color)",
