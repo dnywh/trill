@@ -18,10 +18,10 @@ export default function NotePad({ notes }: NotePadProps) {
 }
 
 const Section = styled("div")({
-  padding: "2rem",
-  backgroundColor: "white",
-  borderRadius: "12px",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+  // padding: "2rem",
+  // backgroundColor: "white",
+  // borderRadius: "12px",
+  // boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
   display: "grid",
   gridTemplateColumns: "repeat(auto-fit, minmax(96px, 1fr))",
   gridAutoRows: "80px",

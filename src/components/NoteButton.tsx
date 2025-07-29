@@ -267,9 +267,10 @@ const StyledButton = styled("button")({
   fontSize: "1rem",
   fontWeight: 500,
   borderRadius: 8,
-  border: "2px solid #4a90e2",
+  border: "none",
+  // border: "2px solid #4a90e2",
   background: "white",
-  color: "#4a90e2",
+  color: "#707070",
   cursor: "pointer",
   transition: "all 0.2s ease",
   position: "relative",
@@ -280,6 +281,8 @@ const StyledButton = styled("button")({
   textAlign: "center",
   lineHeight: "1.2",
   wordBreak: "break-word",
+  boxShadow:
+    "0 1px 0 1px rgba(0, 0, 0, 0.02), 0 1.5px 0 2px rgba(0, 0, 0, 0.01)",
   "&:hover": {
     background: "#e3f2fd",
     transform: "translateY(-1px)",

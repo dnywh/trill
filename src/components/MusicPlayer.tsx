@@ -132,8 +132,16 @@ export default function MusicPlayer({ melody = [] }: MusicPlayerProps) {
 const Container = styled("section")({
   aspectRatio: "1 / 1",
   padding: "2rem",
-  background: "#fff",
+  background: "#FF781F",
   borderRadius: 12,
+  width: "100%",
+  height: "100%", // Add this to ensure height constraint
+  "@media (min-width: 768px)": {
+    minWidth: "440px",
+    width: "50%",
+    maxHeight: "50%", // Let aspect ratio control height in row layout
+    flexShrink: 0,
+  },
 });
 
 const Title = styled("h1")({
