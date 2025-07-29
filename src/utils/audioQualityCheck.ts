@@ -80,7 +80,7 @@ export async function checkAudioQuality(
         isMatch: true,
         confidence: 1,
         expectedPitch: expectedNote,
-        message: `Great! Your recording matches ${expectedNote}`,
+        message: `Done`,
       };
     }
 
@@ -103,7 +103,7 @@ export async function checkAudioQuality(
         isMatch: false,
         confidence: 0,
         expectedPitch: expectedNote,
-        message: "Recording too short - please sing longer",
+        message: "Too short",
       };
     }
 
@@ -126,7 +126,7 @@ export async function checkAudioQuality(
         isMatch: false,
         confidence: 0,
         expectedPitch: expectedNote,
-        message: "Recording too quiet - please sing louder",
+        message: "Too quiet",
       };
     }
 
@@ -146,7 +146,7 @@ export async function checkAudioQuality(
         isMatch: false,
         confidence: 0,
         expectedPitch: expectedNote,
-        message: "Please sing more clearly - too much silence detected",
+        message: "Too quiet",
       };
     }
 
@@ -159,7 +159,7 @@ export async function checkAudioQuality(
         isMatch: false,
         confidence: 0,
         expectedPitch: expectedNote,
-        message: "No clear pitch detected - please sing more clearly",
+        message: "Too unclear",
       };
     }
 
@@ -182,9 +182,7 @@ export async function checkAudioQuality(
       confidence,
       detectedPitch: detectedNote,
       expectedPitch: expectedNote,
-      message: isMatch
-        ? `Great! Your recording matches ${expectedNote}`
-        : `Try again - detected ${detectedNote}, expected ${expectedNote}`,
+      message: isMatch ? `Done` : `Try again`,
     };
   } catch (error) {
     console.error("Error checking audio quality:", error);
@@ -192,7 +190,7 @@ export async function checkAudioQuality(
       isMatch: false,
       confidence: 0,
       expectedPitch: expectedNote,
-      message: "Error analyzing audio - please try again",
+      message: "Error",
     };
   }
 }
