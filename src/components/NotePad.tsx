@@ -29,7 +29,7 @@ export default function NotePad({
   );
 }
 
-const Section = styled("div")({
+const Section = styled("section")({
   display: "grid",
   gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
   gridAutoRows: "120px",

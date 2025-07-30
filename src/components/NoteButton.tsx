@@ -13,7 +13,6 @@ const supabase = createClient(
 type NoteButtonProps = {
   note: string;
   onPlay?: () => void;
-  isPlaying?: boolean;
   contributorId: string;
   onRecordingStart?: () => void;
   onRecordingEnd?: () => void;
@@ -31,7 +30,6 @@ type ButtonState =
 export default function NoteButton({
   note,
   //   onPlay,
-  isPlaying = false,
   contributorId,
   onRecordingStart,
   onRecordingEnd,
@@ -236,7 +234,6 @@ export default function NoteButton({
   const getButtonClassName = () => {
     const classes: string[] = [];
     if (isPressed) classes.push("pressed");
-    if (isPlaying) classes.push("playing");
     if (buttonState === "listening") classes.push("listening");
     if (buttonState === "recording") classes.push("recording");
     if (buttonState === "checking") classes.push("checking");
@@ -276,8 +273,8 @@ const StyledButton = styled("button")({
   borderRadius: 8,
   border: "none",
   // border: "2px solid #4a90e2",
-  background: "var(--spot-color)",
-  color: "#707070",
+  background: "var(--spot-color-white)",
+  color: "var(--tertiary-color)",
   cursor: "pointer",
   transition: "all 0.15s ease",
   position: "relative",
@@ -286,61 +283,46 @@ const StyledButton = styled("button")({
   alignItems: "center",
   justifyContent: "center",
   textAlign: "center",
-  lineHeight: "1.2",
+
+  lineHeight: "120%",
   wordBreak: "break-word",
   boxShadow:
     "0 1px 0 1px rgba(0, 0, 0, 0.02), 0 1.5px 0 2px rgba(0, 0, 0, 0.01)",
+
   "&:hover": {
-    // background: "#e3f2fd",
     transform: "translateY(-2px)",
-    color: "var(--primary-color)",
     boxShadow:
       "0 3px 1px 1px rgba(0, 0, 0, 0.06), 0 4px 5px 2px rgba(0, 0, 0, 0.04)",
+    "&:not(.listening):not(.recording):not(.checking):not(.thanks):not(.success):not(.failed)":
+      {
+        color: "var(--primary-color)",
+      },
   },
+
   "&:disabled": {
     cursor: "not-allowed",
     opacity: 0.7,
   },
-  "&.pressed": {
+  "&.pressed, &.listening, &.recording, &.checking, &.thanks, &.failed": {
+    letterSpacing: "-0.008em",
     background: "var(--button-color-pressed)",
-    // color: "white",
     transform: "translateY(1px)",
     boxShadow:
       "0 1px 0 1px rgba(0, 0, 0, 0.02), 0 1px 0.5px 2px rgba(0, 0, 0, 0.05) inset",
   },
-  "&.playing": {
-    background: "#4caf50",
-    borderColor: "#4caf50",
-    color: "white",
-    animation: "pulse 0.6s ease-in-out",
-  },
-  "&.listening": {
-    background: "#ff9800",
-    borderColor: "#ff9800",
-    color: "white",
-    animation: "pulse 1s infinite",
-  },
   "&.recording": {
-    background: "#e74c3c",
-    borderColor: "#e74c3c",
-    color: "white",
-    animation: "pulse 0.5s infinite",
+    "&::after": {
+      content: '""',
+      position: "absolute",
+      top: "8px",
+      left: "8px",
+      width: "6px",
+      height: "6px",
+      borderRadius: "50%",
+      background: "var(--spot-color-red)",
+    },
   },
-  "&.checking": {
-    background: "#ff9800",
-    borderColor: "#ff9800",
-    color: "white",
-    animation: "pulse 1s infinite",
-  },
-  "&.thanks": {
-    background: "#4caf50",
-    borderColor: "#4caf50",
-    color: "white",
-    animation: "pulse 0.6s ease-in-out",
-  },
-  "&.success": {
-    // background: "var(--spot-color)",
-    borderColor: "var(--state-color-success)",
+  "&.success, &.thanks": {
     position: "relative",
     "&::after": {
       content: '""',
@@ -352,10 +334,5 @@ const StyledButton = styled("button")({
       borderRadius: "50%",
       background: "var(--state-color-success)",
     },
-  },
-  "&.failed": {
-    background: "#f44336",
-    borderColor: "#f44336",
-    color: "white",
   },
 });

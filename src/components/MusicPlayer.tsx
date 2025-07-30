@@ -31,14 +31,30 @@ function dbNoteToToneNote(dbNote: string): string {
 
 // SVG Icon Components
 const PlayIcon = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M8 5v14l11-7z" />
+  <svg
+    width="64"
+    height="63"
+    viewBox="0 0 64 63"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M60.2813 33.2321C61.6146 32.4623 61.6146 30.5377 60.2813 29.7679L19.0312 5.95225C17.6979 5.18245 16.0312 6.1447 16.0312 7.6843V55.3157C16.0312 56.8553 17.6979 57.8176 19.0312 57.0477L60.2813 33.2321Z"
+      fill="black"
+    />
   </svg>
 );
 
 const PauseIcon = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+  <svg
+    width="63"
+    height="63"
+    viewBox="0 0 63 63"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <rect x="13" y="6.5" width="13" height="50" rx="2" fill="black" />
+    <rect x="37" y="6.5" width="13" height="50" rx="2" fill="black" />
   </svg>
 );
 
@@ -84,11 +100,10 @@ export default function MusicPlayer({
   onPlaybackStateChange,
 }: MusicPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isEveryone, setIsEveryone] = useState(true);
   const [sampleUrls, setSampleUrls] = useState<SampleUrls>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [contributorCount, setContributorCount] = useState<
-    number | string | null
-  >(null);
+  const [contributorCount, setContributorCount] = useState<number | string>(2);
   const [isPaused, setIsPaused] = useState(false);
   const playbackRef = useRef<{
     sampler: Tone.Sampler | null;
@@ -291,11 +306,36 @@ export default function MusicPlayer({
             text="When the Saints Go Marching In"
             radius={86}
             startAngle={-160}
-            endAngle={80}
+            endAngle={90}
           />
         </PlayButton>
         <Details>
-          <p>Sampled from {contributorCount} contributors around the world</p>
+          <SegmentedControl>
+            <input
+              type="radio"
+              id="everyone"
+              name="segment-choice"
+              value="everyone"
+              checked={isEveryone}
+              onChange={() => setIsEveryone(true)}
+            />
+            <label htmlFor="everyone">Everyone</label>
+
+            <input
+              type="radio"
+              id="just-me"
+              name="segment-choice"
+              value="just-me"
+              checked={!isEveryone}
+              onChange={() => setIsEveryone(false)}
+            />
+            <label htmlFor="just-me">Just me</label>
+          </SegmentedControl>
+          <p>
+            {isEveryone
+              ? `Samples from ${contributorCount} people around the world`
+              : "Just your own samples"}
+          </p>
         </Details>
       </PlaybackContainer>
       <Footer>
@@ -326,7 +366,7 @@ const Container = styled("section")({
 const PlaybackContainer = styled("div")({
   position: "relative",
   aspectRatio: "1 / 1",
-  padding: "2rem",
+  padding: "1rem",
   background: "var(--primary-color)",
   boxShadow: "0 2px 0px 0px rgba(0, 0, 0, 0.045)",
   borderRadius: 12,
@@ -383,7 +423,7 @@ const PlayButton = styled("button")<{
   top: "50%",
   right: "50%",
   transform: "translate(50%, -50%)",
-  background: "var(--spot-color)",
+  background: "var(--spot-color-white)",
   width: "14rem",
   height: "14rem",
   color: "black",
@@ -443,7 +483,7 @@ const CircularCharacter = styled("span")({
 });
 
 // const Controls = styled("div")({
-//   background: "var(--spot-color)",
+//   background: "var(--spot-color-white)",
 //   padding: "1rem",
 //   borderRadius: "12px",
 //   position: "absolute",
@@ -456,21 +496,75 @@ const CircularCharacter = styled("span")({
 //   // alignItems: "flex-end",
 // });
 
+const SegmentedControl = styled("div")({
+  // display: "flex",
+  flexDirection: "row",
+  gap: "0.45rem",
+  display: "inline-flex",
+  alignItems: "flex-end",
+
+  "& input[type='radio']": {
+    display: "none",
+  },
+
+  "& label": {
+    cursor: "pointer",
+    textTransform: "uppercase",
+    fontSize: "0.85rem",
+    fontWeight: "500",
+    letterSpacing: "0.15em",
+    color: "color-mix(in srgb, var(--spot-color-black) 50%, transparent)",
+    transition: "color 0.1s ease-in-out",
+
+    "&:before, &:after": {
+      color: "color-mix(in srgb, var(--spot-color-black) 15%, transparent)",
+      letterSpacing: "0em",
+      transition: "color 0.1s ease-in-out",
+    },
+
+    "&:before": {
+      content: "'[ '",
+    },
+
+    "&:after": {
+      content: "' ]'",
+    },
+  },
+
+  "& label:last-of-type": {
+    borderRight: "none",
+  },
+
+  "& input[type='radio']:checked + label": {
+    color: "var(--spot-color-black)",
+    "&:before, &:after": {
+      color: "var(--spot-color-black)",
+    },
+  },
+});
+
 const Details = styled("div")({
   position: "absolute",
-  bottom: "2rem",
-  right: "2rem",
+  bottom: "1rem",
+  right: "1rem",
   display: "flex",
   flexDirection: "column",
-  gap: "0.5rem",
+  gap: "0.25rem",
   alignItems: "flex-end",
+  "& p": {
+    color: "color-mix(in srgb, var(--spot-color-black) 50%, transparent)",
+    // textTransform: "uppercase",
+    fontSize: "0.85rem",
+    textAlign: "right",
+    // margin: 0,
+  },
 });
 
 const Footer = styled("footer")({
   "& p": {
     color: "var(--tertiary-color)",
     textTransform: "uppercase",
-    fontSize: "0.8rem",
+    fontSize: "0.75rem",
     letterSpacing: "0.15em",
     textAlign: "center",
 

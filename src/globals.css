@@ -1,8 +1,10 @@
 /* Variables */
 :root {
   --background-color: #f7f7f7;
-  --spot-color: white;
+  --spot-color-white: white;
+  --spot-color-black: black;
   --primary-color: #ff781f;
+  --spot-color-red: #ff3636;
   --secondary-color: #333;
   --tertiary-color: #707070;
   --button-color-pressed: #eaeaea;
