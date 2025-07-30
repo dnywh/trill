@@ -107,7 +107,6 @@ export default function MusicPlayer({
   const [sampleUrls, setSampleUrls] = useState<SampleUrls>({});
   const [isLoading, setIsLoading] = useState(false);
   const [contributorCount, setContributorCount] = useState<number | string>(2);
-  const [isPaused, setIsPaused] = useState(false);
   const [userRecordedNotes, setUserRecordedNotes] = useState<string[]>([]);
   const playbackRef = useRef<{
     sampler: Tone.Sampler | null;
@@ -149,6 +148,13 @@ export default function MusicPlayer({
     }
   }, [isRecording]);
 
+  // Stop playback when filter changes
+  useEffect(() => {
+    if (isPlaying) {
+      stopPlayback();
+    }
+  }, [isEveryone]);
+
   // Check for user's existing recordings on page load
   useEffect(() => {
     async function checkUserRecordings() {
@@ -189,8 +195,6 @@ export default function MusicPlayer({
       playbackRef.current.sampler = null;
     }
     setIsPlaying(false);
-    setIsPaused(false);
-    playbackRef.current.currentIndex = 0;
     onPlaybackStateChange?.(false);
     console.log("Playback stopped");
   };
@@ -200,7 +204,7 @@ export default function MusicPlayer({
       clearTimeout(playbackRef.current.timeoutId);
       playbackRef.current.timeoutId = null;
     }
-    setIsPaused(true);
+    setIsPlaying(false);
     onPlaybackStateChange?.(false);
     console.log("Playback paused");
   };
@@ -213,7 +217,7 @@ export default function MusicPlayer({
       return;
     }
 
-    setIsPaused(false);
+    setIsPlaying(true);
     onPlaybackStateChange?.(true);
     console.log(
       "Resuming playback from index:",
@@ -240,22 +244,21 @@ export default function MusicPlayer({
 
     // Playback finished
     setIsPlaying(false);
-    setIsPaused(false);
     playbackRef.current.currentIndex = 0;
     onPlaybackStateChange?.(false);
     console.log("Finished playback");
   };
 
   const playMelody = async () => {
-    // If paused, resume playback
-    if (isPaused) {
-      resumePlayback();
-      return;
-    }
-
     // If already playing, pause
     if (isPlaying) {
       pausePlayback();
+      return;
+    }
+
+    // If we have a sampler and currentIndex > 0, we're paused and should resume
+    if (playbackRef.current.sampler && playbackRef.current.currentIndex > 0) {
+      resumePlayback();
       return;
     }
 
@@ -332,7 +335,6 @@ export default function MusicPlayer({
 
     // Playback finished
     setIsPlaying(false);
-    setIsPaused(false);
     playbackRef.current.currentIndex = 0;
     onPlaybackStateChange?.(false);
     console.log("Finished playback");
@@ -347,7 +349,6 @@ export default function MusicPlayer({
           disabled={isLoading || melody.length === 0 || isRecording}
           isLoading={isLoading}
           isPlaying={isPlaying}
-          isPaused={isPaused}
           aria-label="Play When the Saints Go Marching In"
         >
           {isLoading ? <PlayIcon /> : isPlaying ? <PauseIcon /> : <PlayIcon />}
@@ -382,10 +383,10 @@ export default function MusicPlayer({
           </SegmentedControl>
           <p>
             {isEveryone
-              ? `Samples from ${contributorCount} people around the world`
+              ? `Sampled from ${contributorCount} people around the world`
               : userRecordedNotes.length === 0
               ? "Record some sounds first"
-              : "Just your own samples"}
+              : "Just your own sounds"}
           </p>
         </Details>
       </PlaybackContainer>
@@ -466,7 +467,6 @@ const playButtonRotateAnimation = keyframes({
 const PlayButton = styled("button")<{
   isLoading: boolean;
   isPlaying: boolean;
-  isPaused: boolean;
 }>(() => ({
   zIndex: 1,
   position: "absolute",
@@ -508,12 +508,6 @@ const PlayButton = styled("button")<{
       props: { isPlaying: true },
       style: {
         animation: `${playButtonRotateAnimation} 10s linear infinite`,
-      },
-    },
-    {
-      props: { isPaused: true },
-      style: {
-        animation: "none",
       },
     },
   ],

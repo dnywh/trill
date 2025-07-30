@@ -8,6 +8,7 @@
   --secondary-color: #333;
   --tertiary-color: #707070;
   --button-color-pressed: #eaeaea;
+  --button-color-remote-pressed: #f7f7f7;
   --state-color-success: #7af286;
   --padding-page: 1.5rem;
 }

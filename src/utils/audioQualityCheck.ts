@@ -58,12 +58,12 @@ function frequencyToNote(frequency: number): string {
 // Check if two frequencies are within acceptable range
 // ADJUST STRICTNESS HERE: Increase toleranceMultiplier to be more lenient, decrease to be stricter
 // Current: 1.5 = allows ~1.5 semitones of variation
-function isFrequencyMatch(freq1: number, freq2: number): boolean {
-  // const ratio = Math.max(freq1, freq2) / Math.min(freq1, freq2);
-  // Allow up to an octave difference
-  // return ratio <= 2.0;
-  return true;
-}
+// function isFrequencyMatch(freq1: number, freq2: number): boolean {
+// const ratio = Math.max(freq1, freq2) / Math.min(freq1, freq2);
+// Allow up to an octave difference
+// return ratio <= 2.0;
+// return true;
+// }
 
 export async function checkAudioQuality(
   audioBlob: Blob,
@@ -165,7 +165,8 @@ export async function checkAudioQuality(
 
     const detectedNote = frequencyToNote(pitch);
     const expectedFreq = noteToFrequency(expectedNote);
-    const isMatch = isFrequencyMatch(pitch, expectedFreq);
+    // const isMatch = isFrequencyMatch(pitch, expectedFreq);
+    const isMatch = true;
 
     // Calculate confidence based on how close the frequencies are
     const frequencyRatio =

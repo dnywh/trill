@@ -4,11 +4,22 @@ import * as Tone from "tone";
 import { createClient } from "@supabase/supabase-js";
 import { transformNoteForDatabase } from "../utils/noteExtractor";
 import { checkAudioQuality } from "../utils/audioQualityCheck";
+import {
+  broadcastButtonPress,
+  subscribeToButtonPresses,
+} from "../utils/realtimeManager";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL as string,
   import.meta.env.VITE_SUPABASE_ANON_KEY as string
 );
+
+// Type for the payload received from realtime broadcasts
+type ButtonPressPayload = {
+  note: string;
+  contributorId: string;
+  timestamp: number;
+};
 
 type NoteButtonProps = {
   note: string;
@@ -39,6 +50,7 @@ export default function NoteButton({
   isAlreadyRecorded = false,
 }: NoteButtonProps) {
   const [isPressed, setIsPressed] = useState(false);
+  const [isRemotePressed, setIsRemotePressed] = useState(false);
   const [buttonState, setButtonState] = useState<ButtonState>(
     isAlreadyRecorded ? "success" : "idle"
   );
@@ -50,10 +62,36 @@ export default function NoteButton({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const recordingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const failedTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const remotePressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const newSynth = new Tone.Synth().toDestination();
     setSynth(newSynth);
+
+    // Subscribe to remote button presses for this specific note
+    const unsubscribe = subscribeToButtonPresses(
+      note,
+      (payload: ButtonPressPayload) => {
+        // Only respond to presses from other users
+        if (payload.contributorId !== contributorId) {
+          console.log(
+            `Remote button press: ${note} from ${payload.contributorId}`
+          );
+
+          // Clear any existing remote press timeout
+          if (remotePressTimeoutRef.current) {
+            clearTimeout(remotePressTimeoutRef.current);
+          }
+
+          setIsRemotePressed(true);
+
+          // Clear remote pressed state after a short time
+          remotePressTimeoutRef.current = setTimeout(() => {
+            setIsRemotePressed(false);
+          }, 200);
+        }
+      }
+    );
 
     // Cleanup function
     return () => {
@@ -66,8 +104,12 @@ export default function NoteButton({
       if (failedTimeoutRef.current) {
         clearTimeout(failedTimeoutRef.current);
       }
+      if (remotePressTimeoutRef.current) {
+        clearTimeout(remotePressTimeoutRef.current);
+      }
+      unsubscribe();
     };
-  }, []);
+  }, [note, contributorId]);
 
   // Update button state when isAlreadyRecorded changes
   useEffect(() => {
@@ -220,6 +262,9 @@ export default function NoteButton({
 
     console.log(`NoteButton clicked: ${note}`);
 
+    // Broadcast the button press to other users
+    broadcastButtonPress(note, contributorId);
+
     // Immediately notify that recording is starting to disable other buttons
     onRecordingStart?.();
 
@@ -257,14 +302,23 @@ export default function NoteButton({
   const getButtonClassName = () => {
     const classes: string[] = [];
     if (isPressed) classes.push("pressed");
+    if (isRemotePressed) {
+      classes.push("remote-pressed"); // Remote presses also show as pressed
+    }
     if (buttonState === "listening") classes.push("listening");
     if (buttonState === "recording") classes.push("recording");
     if (buttonState === "checking") classes.push("checking");
     if (buttonState === "thanks") classes.push("thanks");
     if (buttonState === "success") classes.push("success");
     if (buttonState === "failed") classes.push("failed");
+
     return classes.join(" ");
   };
+
+  // Add a debug effect to monitor state changes
+  useEffect(() => {
+    console.log(`isRemotePressed changed for ${note}: ${isRemotePressed}`);
+  }, [isRemotePressed, note]);
 
   return (
     <StyledButton
@@ -332,6 +386,12 @@ const StyledButton = styled("button")({
   },
   "&.pressed, &.listening, &.recording, &.checking, &.thanks, &.failed": {
     letterSpacing: "-0.008em",
+  },
+  "&.remote-pressed": {
+    background: "var(--button-color-remote-pressed)",
+    transform: "translateY(1px)",
+    boxShadow:
+      "0 1px 0 1px rgba(0, 0, 0, 0.02), 0 1px 0.5px 2px rgba(0, 0, 0, 0.05) inset",
   },
   "&.recording": {
     "&::after": {
