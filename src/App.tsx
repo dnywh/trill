@@ -8,6 +8,7 @@ function App() {
   const [melody, setMelody] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
+  const [userRecordedNotes, setUserRecordedNotes] = useState<string[]>([]);
 
   // Load song data and extract notes from track 0
   useEffect(() => {
@@ -58,10 +59,15 @@ function App() {
     console.log("Playback state changed:", isPlaying);
   };
 
+  const handleUserRecordedNotesChange = (recordedNotes: string[]) => {
+    console.log("User recorded notes updated:", recordedNotes);
+    setUserRecordedNotes(recordedNotes);
+  };
+
   if (isLoading) {
     return (
       <AppContainer>
-        <div>Loading song data...</div>
+        <div>Loading...</div>
       </AppContainer>
     );
   }
@@ -72,11 +78,14 @@ function App() {
         melody={melody}
         isRecording={isRecording}
         onPlaybackStateChange={handlePlaybackStateChange}
+        onUserRecordedNotesChange={handleUserRecordedNotesChange}
       />
       <NotePad
         notes={notes}
         onRecordingStart={handleRecordingStart}
         onRecordingEnd={handleRecordingEnd}
+        isRecording={isRecording}
+        userRecordedNotes={userRecordedNotes}
       />
     </AppContainer>
   );

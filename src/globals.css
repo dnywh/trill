@@ -4,12 +4,12 @@
   --spot-color-white: white;
   --spot-color-black: black;
   --primary-color: #ff781f;
-  --spot-color-red: #ff3636;
+  --spot-color-red: #ff1f1f;
   --secondary-color: #333;
   --tertiary-color: #707070;
   --button-color-pressed: #eaeaea;
   --state-color-success: #7af286;
-  --padding-page: 2rem;
+  --padding-page: 1.5rem;
 }
 
 /* CSS Reset */

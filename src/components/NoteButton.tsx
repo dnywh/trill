@@ -16,6 +16,8 @@ type NoteButtonProps = {
   contributorId: string;
   onRecordingStart?: () => void;
   onRecordingEnd?: () => void;
+  isRecording: boolean;
+  isAlreadyRecorded?: boolean;
 };
 
 type ButtonState =
@@ -33,9 +35,13 @@ export default function NoteButton({
   contributorId,
   onRecordingStart,
   onRecordingEnd,
+  isRecording,
+  isAlreadyRecorded = false,
 }: NoteButtonProps) {
   const [isPressed, setIsPressed] = useState(false);
-  const [buttonState, setButtonState] = useState<ButtonState>("idle");
+  const [buttonState, setButtonState] = useState<ButtonState>(
+    isAlreadyRecorded ? "success" : "idle"
+  );
   const [synth, setSynth] = useState<Tone.Synth | null>(null);
   const [isAudioStarted, setIsAudioStarted] = useState(false);
   const [failureMessage, setFailureMessage] = useState<string>("");
@@ -62,6 +68,13 @@ export default function NoteButton({
       }
     };
   }, []);
+
+  // Update button state when isAlreadyRecorded changes
+  useEffect(() => {
+    if (isAlreadyRecorded) {
+      setButtonState("success");
+    }
+  }, [isAlreadyRecorded]);
 
   const playNote = async (note: string) => {
     if (!synth) return;
@@ -184,6 +197,12 @@ export default function NoteButton({
   };
 
   const handleClick = async () => {
+    // Add this check at the beginning
+    if (isRecording) {
+      console.log("Another recording is in progress, ignoring click");
+      return;
+    }
+
     if (
       buttonState !== "idle" &&
       buttonState !== "failed" &&
@@ -200,6 +219,10 @@ export default function NoteButton({
     }
 
     console.log(`NoteButton clicked: ${note}`);
+
+    // Immediately notify that recording is starting to disable other buttons
+    onRecordingStart?.();
+
     await playNote(note);
     setButtonState("listening");
     setFailureMessage("");
@@ -251,11 +274,10 @@ export default function NoteButton({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseLeave}
       disabled={
-        buttonState !== "idle" &&
-        buttonState !== "failed" &&
-        // buttonState !== "listening" &&
-        buttonState !== "success" &&
-        buttonState !== "thanks"
+        isRecording ||
+        buttonState === "listening" ||
+        buttonState === "recording" ||
+        buttonState === "checking"
       }
     >
       {getButtonText()}
@@ -272,7 +294,6 @@ const StyledButton = styled("button")({
   fontWeight: 400,
   borderRadius: 8,
   border: "none",
-  // border: "2px solid #4a90e2",
   background: "var(--spot-color-white)",
   color: "var(--tertiary-color)",
   cursor: "pointer",
@@ -287,13 +308,13 @@ const StyledButton = styled("button")({
   lineHeight: "120%",
   wordBreak: "break-word",
   boxShadow:
-    "0 1px 0 1px rgba(0, 0, 0, 0.02), 0 1.5px 0 2px rgba(0, 0, 0, 0.01)",
+    "0 2px 0px 0px rgba(0, 0, 0, 0.015), 0 1px 0 1px rgba(0, 0, 0, 0.02), 0 1.5px 0 2px rgba(0, 0, 0, 0.01)",
 
   "&:hover": {
     transform: "translateY(-2px)",
     boxShadow:
       "0 3px 1px 1px rgba(0, 0, 0, 0.06), 0 4px 5px 2px rgba(0, 0, 0, 0.04)",
-    "&:not(.listening):not(.recording):not(.checking):not(.thanks):not(.success):not(.failed)":
+    "&:not(.listening):not(.recording):not(.checking):not(.thanks):not(.success)":
       {
         color: "var(--primary-color)",
       },
@@ -303,21 +324,23 @@ const StyledButton = styled("button")({
     cursor: "not-allowed",
     opacity: 0.7,
   },
-  "&.pressed, &.listening, &.recording, &.checking, &.thanks, &.failed": {
-    letterSpacing: "-0.008em",
+  "&.pressed, &.listening, &.recording, &.checking": {
     background: "var(--button-color-pressed)",
     transform: "translateY(1px)",
     boxShadow:
       "0 1px 0 1px rgba(0, 0, 0, 0.02), 0 1px 0.5px 2px rgba(0, 0, 0, 0.05) inset",
   },
+  "&.pressed, &.listening, &.recording, &.checking, &.thanks, &.failed": {
+    letterSpacing: "-0.008em",
+  },
   "&.recording": {
     "&::after": {
       content: '""',
       position: "absolute",
-      top: "8px",
-      left: "8px",
-      width: "6px",
-      height: "6px",
+      top: "9px",
+      left: "9px",
+      width: "7px",
+      height: "7px",
       borderRadius: "50%",
       background: "var(--spot-color-red)",
     },
@@ -327,10 +350,10 @@ const StyledButton = styled("button")({
     "&::after": {
       content: '""',
       position: "absolute",
-      top: "8px",
-      left: "8px",
-      width: "6px",
-      height: "6px",
+      top: "9px",
+      left: "9px",
+      width: "7px",
+      height: "7px",
       borderRadius: "50%",
       background: "var(--state-color-success)",
     },

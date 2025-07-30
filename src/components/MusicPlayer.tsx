@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 import * as Tone from "tone";
 import { styled, keyframes } from "@pigment-css/react";
+import { getOrCreateContributorId } from "../utils/getOrCreateContributorId";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL as string,
@@ -17,6 +18,7 @@ type MusicPlayerProps = {
   melody?: MelodyNote[];
   isRecording?: boolean;
   onPlaybackStateChange?: (isPlaying: boolean) => void;
+  onUserRecordedNotesChange?: (notes: string[]) => void;
 };
 
 type SampleUrls = Record<string, string>;
@@ -98,6 +100,7 @@ export default function MusicPlayer({
   melody = [],
   isRecording = false,
   onPlaybackStateChange,
+  onUserRecordedNotesChange,
 }: MusicPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isEveryone, setIsEveryone] = useState(true);
@@ -105,6 +108,7 @@ export default function MusicPlayer({
   const [isLoading, setIsLoading] = useState(false);
   const [contributorCount, setContributorCount] = useState<number | string>(2);
   const [isPaused, setIsPaused] = useState(false);
+  const [userRecordedNotes, setUserRecordedNotes] = useState<string[]>([]);
   const playbackRef = useRef<{
     sampler: Tone.Sampler | null;
     currentIndex: number;
@@ -132,12 +136,48 @@ export default function MusicPlayer({
     fetchContributorCount();
   }, []);
 
+  // Clear sample URLs when isEveryone changes
+  useEffect(() => {
+    setSampleUrls({});
+    console.log("Cleared sample URLs due to isEveryone change:", isEveryone);
+  }, [isEveryone]);
+
   // Stop playback when recording starts
   useEffect(() => {
     if (isRecording && isPlaying) {
       stopPlayback();
     }
   }, [isRecording]);
+
+  // Check for user's existing recordings on page load
+  useEffect(() => {
+    async function checkUserRecordings() {
+      const contributorId = getOrCreateContributorId();
+      console.log(
+        "Checking existing recordings for contributor:",
+        contributorId
+      );
+
+      const { data, error } = await supabase
+        .from("recordings")
+        .select("note")
+        .eq("contributor_id", contributorId);
+
+      if (error) {
+        console.error("Error fetching user recordings:", error);
+        return;
+      }
+
+      const recordedNotes = (data as { note: string }[]).map((rec) =>
+        dbNoteToToneNote(rec.note)
+      );
+      setUserRecordedNotes(recordedNotes);
+      onUserRecordedNotesChange?.(recordedNotes);
+      console.log("User has recorded notes:", recordedNotes);
+    }
+
+    checkUserRecordings();
+  }, []);
 
   const stopPlayback = () => {
     if (playbackRef.current.timeoutId) {
@@ -226,9 +266,17 @@ export default function MusicPlayer({
     let currentSampleUrls = sampleUrls;
     if (Object.keys(currentSampleUrls).length === 0) {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from("recordings")
-        .select("note, filename");
+
+      // Build the query based on isEveryone state
+      let query = supabase.from("recordings").select("note, filename");
+
+      if (!isEveryone) {
+        const contributorId = getOrCreateContributorId();
+        console.log("Filtering recordings for contributor:", contributorId);
+        query = query.eq("contributor_id", contributorId);
+      }
+
+      const { data, error } = await query;
       if (error) {
         console.error("Supabase fetch error:", error);
         setIsLoading(false);
@@ -236,6 +284,7 @@ export default function MusicPlayer({
         onPlaybackStateChange?.(false);
         return;
       }
+
       const urls: SampleUrls = {};
       (data as { note: string; filename: string }[]).forEach((rec) => {
         const note = dbNoteToToneNote(rec.note);
@@ -247,6 +296,7 @@ export default function MusicPlayer({
       currentSampleUrls = urls;
       setIsLoading(false);
       console.log("Sample URLs:", urls);
+      console.log("Filter mode:", isEveryone ? "Everyone" : "Just me");
     }
 
     await Tone.start();
@@ -298,7 +348,6 @@ export default function MusicPlayer({
           isLoading={isLoading}
           isPlaying={isPlaying}
           isPaused={isPaused}
-          test="foo"
           aria-label="Play When the Saints Go Marching In"
         >
           {isLoading ? <PlayIcon /> : isPlaying ? <PauseIcon /> : <PlayIcon />}
@@ -334,6 +383,8 @@ export default function MusicPlayer({
           <p>
             {isEveryone
               ? `Samples from ${contributorCount} people around the world`
+              : userRecordedNotes.length === 0
+              ? "Record some sounds first"
               : "Just your own samples"}
           </p>
         </Details>
@@ -416,7 +467,6 @@ const PlayButton = styled("button")<{
   isLoading: boolean;
   isPlaying: boolean;
   isPaused: boolean;
-  test: string;
 }>(() => ({
   zIndex: 1,
   position: "absolute",
@@ -436,6 +486,16 @@ const PlayButton = styled("button")<{
   boxShadow: "0 2px 0px 0px rgba(0, 0, 0, 0.045)",
   transition: "transform 0.2s ease-in-out",
   animation: "none",
+
+  "&:disabled": {
+    cursor: "not-allowed",
+
+    "& svg": {
+      opacity: 0.5,
+      transform: "scale(0.85)",
+      transition: "transform 0.1s ease-in-out, opacity 0.1s ease-in-out",
+    },
+  },
 
   variants: [
     {
