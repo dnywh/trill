@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { styled } from "@pigment-css/react";
 import NotePad from "./components/NotePad";
 import MusicPlayer from "./components/MusicPlayer";
+import { sortNotesMusically } from "./utils/noteExtractor";
 
 function App() {
   const [notes, setNotes] = useState<string[]>([]);
@@ -26,9 +27,9 @@ function App() {
         );
 
         // Get unique notes from track 0 for the NotePad
-        const uniqueNotes = [
-          ...new Set(track0Notes.map((n: { note: string }) => n.note)),
-        ].sort() as string[];
+        const uniqueNotes = sortNotesMusically(
+          Array.from(new Set(track0Notes.map((n: { note: string }) => n.note)))
+        );
 
         setMelody(track0Notes);
         setNotes(uniqueNotes);
@@ -93,7 +94,7 @@ function App() {
 
 export default App;
 
-const AppContainer = styled("div")({
+const AppContainer = styled("main")({
   padding: "var(--padding-page)",
   minHeight: "100vh",
   display: "flex",

@@ -107,6 +107,84 @@ export async function checkAudioQuality(
       };
     }
 
+    // Check for proper start - ensure not too much silence at beginning
+    const startSegmentLength = Math.floor(channelData.length * 0.2); // First 20%
+    let startSilenceCount = 0;
+    for (let i = 0; i < startSegmentLength; i++) {
+      if (Math.abs(channelData[i]) < 0.01) {
+        startSilenceCount++;
+      }
+    }
+    const startSilenceRatio = startSilenceCount / startSegmentLength;
+    console.log(`Start silence ratio: ${startSilenceRatio.toFixed(3)}`);
+
+    if (startSilenceRatio > 0.6) {
+      console.log("Too much silence at start of recording");
+      return {
+        isMatch: false,
+        confidence: 0,
+        expectedPitch: expectedNote,
+        message: "Start singing sooner",
+      };
+    }
+
+    // Check for consistent sound throughout the recording
+    const segmentCount = 8; // Divide recording into 8 segments
+    const segmentLength = Math.floor(channelData.length / segmentCount);
+    const segmentRMS: number[] = [];
+
+    for (let seg = 0; seg < segmentCount; seg++) {
+      const start = seg * segmentLength;
+      const end = Math.min(start + segmentLength, channelData.length);
+      let segmentSum = 0;
+
+      for (let i = start; i < end; i++) {
+        segmentSum += channelData[i] * channelData[i];
+      }
+
+      const segmentRms = Math.sqrt(segmentSum / (end - start));
+      segmentRMS.push(segmentRms);
+    }
+
+    console.log(
+      `Segment RMS values: ${segmentRMS.map((r) => r.toFixed(4)).join(", ")}`
+    );
+
+    // Check for significant drops in volume (indicates inconsistent singing)
+    const maxRMS = Math.max(...segmentRMS);
+    const minRMS = Math.min(...segmentRMS);
+    const volumeVariation = maxRMS > 0 ? (maxRMS - minRMS) / maxRMS : 0;
+
+    console.log(`Volume variation: ${volumeVariation.toFixed(3)}`);
+
+    if (volumeVariation > 0.92) {
+      console.log("Too much volume variation - inconsistent singing");
+      return {
+        isMatch: false,
+        confidence: 0,
+        expectedPitch: expectedNote,
+        message: "Sing more consistently",
+      };
+    }
+
+    // Check that at least 6 out of 8 segments have sufficient volume
+    const sufficientVolumeSegments = segmentRMS.filter(
+      (rms) => rms > 0.005
+    ).length;
+    console.log(
+      `Segments with sufficient volume: ${sufficientVolumeSegments}/${segmentCount}`
+    );
+
+    if (sufficientVolumeSegments < 6) {
+      console.log("Too many quiet segments");
+      return {
+        isMatch: false,
+        confidence: 0,
+        expectedPitch: expectedNote,
+        message: "Sing more consistently",
+      };
+    }
+
     // Debug: Check audio levels
     let maxAmplitude = 0;
     let rms = 0;
@@ -130,18 +208,27 @@ export async function checkAudioQuality(
       };
     }
 
-    // Check if audio is mostly silence
+    // Check if audio is mostly silence (more granular)
     let silenceCount = 0;
+    let lowVolumeCount = 0;
     for (let i = 0; i < channelData.length; i++) {
       if (Math.abs(channelData[i]) < 0.01) {
         silenceCount++;
       }
+      if (Math.abs(channelData[i]) < 0.02) {
+        lowVolumeCount++;
+      }
     }
     const silenceRatio = silenceCount / channelData.length;
-    console.log(`Silence ratio: ${silenceRatio.toFixed(3)}`);
+    const lowVolumeRatio = lowVolumeCount / channelData.length;
+    console.log(
+      `Silence ratio: ${silenceRatio.toFixed(
+        3
+      )}, Low volume ratio: ${lowVolumeRatio.toFixed(3)}`
+    );
 
-    if (silenceRatio > 0.8) {
-      console.log("Too much silence in recording");
+    if (silenceRatio > 0.7 || lowVolumeRatio > 0.85) {
+      console.log("Too much silence/low volume in recording");
       return {
         isMatch: false,
         confidence: 0,

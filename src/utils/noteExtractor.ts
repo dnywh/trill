@@ -80,3 +80,48 @@ export function transformNoteForDatabase(noteName: string): string {
 
   return transformed;
 }
+
+// Sort notes musically by pitch (lowest to highest)
+export function sortNotesMusically(notes: string[]): string[] {
+  const noteOrder = [
+    "C",
+    "C#",
+    "D",
+    "D#",
+    "E",
+    "F",
+    "F#",
+    "G",
+    "G#",
+    "A",
+    "A#",
+    "B",
+  ];
+
+  return notes.sort((a, b) => {
+    // Extract note name and octave
+    const aMatch = a.match(/^([A-G]#?)(\d+)$/);
+    const bMatch = b.match(/^([A-G]#?)(\d+)$/);
+
+    if (!aMatch || !bMatch) {
+      // Fallback to alphabetical sort if parsing fails
+      return a.localeCompare(b);
+    }
+
+    const [, aNote, aOctaveStr] = aMatch;
+    const [, bNote, bOctaveStr] = bMatch;
+    const aOctave = parseInt(aOctaveStr);
+    const bOctave = parseInt(bOctaveStr);
+
+    // First compare by octave
+    if (aOctave !== bOctave) {
+      return aOctave - bOctave;
+    }
+
+    // Then compare by note within the same octave
+    const aNoteIndex = noteOrder.indexOf(aNote);
+    const bNoteIndex = noteOrder.indexOf(bNote);
+
+    return aNoteIndex - bNoteIndex;
+  });
+}

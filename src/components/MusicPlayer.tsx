@@ -288,12 +288,27 @@ export default function MusicPlayer({
         return;
       }
 
-      const urls: SampleUrls = {};
+      // Group recordings by note and pick a random one for each
+      const recordingsByNote: Record<
+        string,
+        { note: string; filename: string }[]
+      > = {};
       (data as { note: string; filename: string }[]).forEach((rec) => {
         const note = dbNoteToToneNote(rec.note);
+        if (!recordingsByNote[note]) {
+          recordingsByNote[note] = [];
+        }
+        recordingsByNote[note].push(rec);
+      });
+
+      const urls: SampleUrls = {};
+      Object.entries(recordingsByNote).forEach(([note, recordings]) => {
+        // Pick a random recording for this note
+        const randomIndex = Math.floor(Math.random() * recordings.length);
+        const randomRecording = recordings[randomIndex];
         urls[
           note
-        ] = `https://tlyohnvvixywznonvgwj.supabase.co/storage/v1/object/public/recordings/${rec.note}/${rec.filename}.wav`;
+        ] = `https://tlyohnvvixywznonvgwj.supabase.co/storage/v1/object/public/recordings/${randomRecording.note}/${randomRecording.filename}.wav`;
       });
       setSampleUrls(urls);
       currentSampleUrls = urls;
@@ -484,8 +499,13 @@ const PlayButton = styled("button")<{
   alignItems: "center",
   justifyContent: "center",
   boxShadow: "0 2px 0px 0px rgba(0, 0, 0, 0.045)",
-  transition: "transform 0.2s ease-in-out",
+  transition: "transform 0.12s ease-in-out",
   animation: "none",
+
+  "&:hover": {
+    transform: "translate(50%, -50%) scale(1.015)",
+    boxShadow: "0 4px 3px 0px rgba(0, 0, 0, 0.045)",
+  },
 
   "&:disabled": {
     cursor: "not-allowed",

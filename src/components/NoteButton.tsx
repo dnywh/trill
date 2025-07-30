@@ -316,9 +316,9 @@ export default function NoteButton({
   };
 
   // Add a debug effect to monitor state changes
-  useEffect(() => {
-    console.log(`isRemotePressed changed for ${note}: ${isRemotePressed}`);
-  }, [isRemotePressed, note]);
+  // useEffect(() => {
+  //   console.log(`isRemotePressed changed for ${note}: ${isRemotePressed}`);
+  // }, [isRemotePressed, note]);
 
   return (
     <StyledButton

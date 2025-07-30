@@ -1,6 +1,6 @@
 # Trill
 
-This is a dogfooding experiment for Supabase. It does some naughty things:
+This is a dogfooding experiment for Supabase. You can [find it online](https://trill-topaz.vercel.app/). It does some naughty things:
 
 - Allows `anon` uploads to a storage bucket named `recordings`
 - Allows `anon` additions to a table named `recordings`
@@ -22,10 +22,11 @@ You’ll need to also copy over `.env.example` to a new `.env` file with values.
 
 Trill was a quick two day project. There are tonnes more things that could be done to improve it, such as:
 
-- [] Ability for user to just hear their own notes (not the crowdsourced version)
-- [] Sound classification to automatically reject duds (silent, wrong note)
-- [] Sound classification to add a `quality` float value, to preference higher-quality note recordings
-- [] Sound cropping before upload to remove any starting or ending silence
+- [ ] More stringent checks to avoid abuse
+- [x] Ability for user to just hear their own notes (not the crowdsourced version)
+- [x] Sound classification to automatically reject duds (silent, wrong note)
+- [ ] Sound classification to add a `quality` float value, to preference higher-quality note recordings
+- [ ] Sound cropping before upload to remove any starting or ending silence
 
 ## Colophon
 
